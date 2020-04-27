@@ -1,0 +1,35 @@
+name: meuh_life
+description: Meuh Life App
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.1.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^0.1.2
+  firebase_auth: ^0.14.0+5
+  firebase_database: ^3.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter.
+flutter:
+
+  uses-material-design: true
+
+  assets:
+    - images/
+
+  fonts:
+    - family: Marker
+      fonts:
+        - asset: fonts/PermanentMarker-Regular.ttf
+
