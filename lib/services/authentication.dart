@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 abstract class BaseAuth {
@@ -26,6 +28,7 @@ class Auth implements BaseAuth {
   }
 
   Future<String> signUp(String email, String password) async {
+    print("email $email and password $password");
     AuthResult result = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     FirebaseUser user = result.user;
@@ -48,6 +51,11 @@ class Auth implements BaseAuth {
 
   Future<bool> isEmailVerified() async {
     FirebaseUser user = await _firebaseAuth.currentUser();
+    await user.reload();
+    //Update the state in the user DB
+    DocumentReference ref = Firestore.instance.document("users/" + user.uid);
+    ref.updateData({"isEmailVerified": user.isEmailVerified});
+
     return user.isEmailVerified;
   }
 }
