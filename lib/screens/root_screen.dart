@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:meuh_life/screens/login_signup_screen.dart';
-import 'package:meuh_life/services/authentication.dart';
+import 'package:meuh_life/screens/connexion_screen.dart';
 import 'package:meuh_life/screens/home_screen.dart';
+import 'package:meuh_life/services/authentication.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum AuthStatus {
   NOT_DETERMINED,
   NOT_LOGGED_IN,
   LOGGED_IN,
+}
+// Shared Preference save USER ID
+saveUserIDToSF(userID) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setString('userID', userID);
 }
 
 class RootScreen extends StatefulWidget {
@@ -38,10 +44,12 @@ class _RootScreenState extends State<RootScreen> {
 
   void loginCallback() {
     widget.auth.getCurrentUser().then((user) {
+      saveUserIDToSF(user.uid.toString());
       setState(() {
         _userId = user.uid.toString();
       });
     });
+
     setState(() {
       authStatus = AuthStatus.LOGGED_IN;
     });
@@ -70,7 +78,7 @@ class _RootScreenState extends State<RootScreen> {
         return buildWaitingScreen();
         break;
       case AuthStatus.NOT_LOGGED_IN:
-        return new LoginSignupScreen(
+        return new ConnexionScreen(
           auth: widget.auth,
           loginCallback: loginCallback,
         );
