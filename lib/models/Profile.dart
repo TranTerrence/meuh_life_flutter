@@ -91,7 +91,7 @@ class Profile {
   }
 }
 
-createPicUrl(lastName, promo) {
+String createPicUrl(String lastName, String promo) {
   String lName = capitalize(lastName);
   String picUrlNameTemp = lName.replaceAll("-", "");
   String picUrlName;
@@ -100,10 +100,7 @@ createPicUrl(lastName, promo) {
   } else {
     picUrlName = picUrlNameTemp.toLowerCase();
   }
-  return 'https://eleves.mines-paris.eu/static//img/trombi/' +
-      promo +
-      picUrlName +
-      '.jpg';
+  return 'https://eleves.mines-paris.eu/static//img/trombi/$promo$picUrlName.jpg';
 }
 
 String capitalize(String s) =>

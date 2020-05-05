@@ -71,6 +71,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.of(context).pop();
                   _checkEmailVerification();
                 },
+                // TODO: Add a logout button
+              ),
+              new FlatButton(
+                child: new Text("Deconnexion"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  signOut();
+                },
               ),
             ],
           ),
@@ -86,9 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (BuildContext context) {
         // return object of type Dialog
         return WillPopScope(
-          onWillPop: () {
-            signOut();
-          }, //Disable back button
+          onWillPop: () {}, //Disable back button
           child: AlertDialog(
             title: new Text("Verify your account"),
             content: new Text("Le lien pour vérifier ton email a été envoyé"),
@@ -119,47 +125,49 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     List<Widget> _widgetOptions = <Widget>[
-      ProfileScreen(widget.userId, widget.auth),
+      ProfileScreen(widget.userId, widget.auth, signOut),
       MarketScreen(),
       Text(
         'Index 2: Chats',
       ),
     ];
-    return new Scaffold(
-      appBar: new AppBar(
-        backgroundColor: Colors.blue.shade800,
-        leading: Image.asset('images/logo.png'),
-        title: new Text(
-          'Meuh Life',
-          style: TextStyle(fontFamily: 'Marker'),
+    return SafeArea(
+      child: new Scaffold(
+        /**appBar: new AppBar(
+            backgroundColor: Colors.blue.shade800,
+            leading: Image.asset('images/logo.png'),
+            title: new Text(
+            'Meuh Life',
+            style: TextStyle(fontFamily: 'Marker'),
+            ),
+            actions: <Widget>[
+            new FlatButton(
+            child: new Text('Logout',
+            style: new TextStyle(fontSize: 17.0, color: Colors.white)),
+            onPressed: signOut)
+            ],
+            ),*/
+        body: _widgetOptions.elementAt(_selectedIndex),
+        bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_pin),
+              title: Text('Profile'),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.store),
+              title: Text('Marché'),
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.chat),
+              title: Text('Chats'),
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.amber[800],
+          onTap: _onItemTapped,
         ),
-        actions: <Widget>[
-          new FlatButton(
-              child: new Text('Logout',
-                  style: new TextStyle(fontSize: 17.0, color: Colors.white)),
-              onPressed: signOut)
-        ],
-      ),
-      body: _widgetOptions.elementAt(_selectedIndex),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_pin),
-            title: Text('Profile'),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.store),
-            title: Text('Marché'),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            title: Text('Chats'),
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
-        onTap: _onItemTapped,
       ),
     );
   }

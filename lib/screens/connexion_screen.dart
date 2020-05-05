@@ -50,11 +50,17 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
       String _lastName = splitFullName[1];
 
       Profile profile = new Profile(_firstName, _lastName, _promo, _gapYear);
+      print('LOGGING');
+
       try {
         if (_isLoginForm) {
+          print('Logging in');
+
           userId = await widget.auth.signIn(profile.email, _password);
           print('Signed in: $userId');
         } else {
+          print('Creation of account');
+
           userId = await widget.auth.signUp(profile.email, _password);
           widget.auth.sendEmailVerification();
           _showVerifyEmailSentDialog();
