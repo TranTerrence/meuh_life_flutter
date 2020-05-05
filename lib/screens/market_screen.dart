@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_image/firebase_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:meuh_life/models/Post.dart';
 import 'package:meuh_life/models/Profile.dart';
@@ -12,34 +14,50 @@ class MarketScreen extends StatefulWidget {
   _MarketScreenState createState() => _MarketScreenState();
 }
 
-class _MarketScreenState extends State<MarketScreen> {
+class _MarketScreenState extends State<MarketScreen>
+    with TickerProviderStateMixin<MarketScreen> {
   //final String userID = getUserID();
   String _locale = 'fr';
   DateFormat format = DateFormat('EEEE dd MMMM à HH:mm');
+  AnimationController _hideFabAnimation;
 
   @override
-  void initState() {
-    // TODO: implement initState
+  initState() {
     super.initState();
+    _hideFabAnimation =
+        AnimationController(vsync: this, duration: kThemeAnimationDuration);
+  }
+
+  @override
+  void dispose() {
+    _hideFabAnimation.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => CreatePostScreen()),
+    return NotificationListener<ScrollNotification>(
+      onNotification: _handleScrollNotification,
+      child: Scaffold(
+        floatingActionButton: ScaleTransition(
+          scale: _hideFabAnimation,
+          child: FloatingActionButton(
+            onPressed: () =>
+            {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CreatePostScreen()),
+              ),
+            },
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+            ),
+            backgroundColor: Colors.blue.shade800,
           ),
-        },
-        child: Icon(
-          Icons.add,
-          color: Colors.white,
         ),
-        backgroundColor: Colors.blue.shade800,
+        body: showPostList(),
       ),
-      body: showPostList(),
     );
   }
 
@@ -71,51 +89,98 @@ class _MarketScreenState extends State<MarketScreen> {
 
     return Container(
       child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: Row(
-          children: <Widget>[
-            Text(post.startDate != null
-                ? format.format((post.startDate))
-                : format.format((post.creationDate))),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  document['title'],
-                  style: TextStyle(fontSize: 40.0),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: <Widget>[
+              Text(
+                post.startDate != null
+                    ? format.format(post.startDate)
+                    : format.format(post.creationDate),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(
+                width: 8.0,
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      post.title,
+                      style: TextStyle(fontSize: 40.0),
+                    ),
+                    Text(
+                      post.description,
+                      softWrap: true,
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 18.0),
+                    ),
+                    if (post.imageURL.length > 0 && post.imageURL != null)
+                      Image(
+                        image: FirebaseImage(post.imageURL),
+                      ),
+                    StreamBuilder(
+                        stream: Firestore.instance
+                            .collection('users')
+                            .document(document['author'])
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return new Text("Chargement ... ");
+                          }
+                          Profile profile =
+                          Profile.fromDocSnapshot(snapshot.data);
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: <Widget>[
+                              Text(
+                                '${profile.firstName} ${profile.lastName[0]}.'
+                                    '\n(P${profile.promo})',
+                              ),
+                              SizedBox(
+                                width: 8.0,
+                              ),
+                              profile.getCircleAvatar(radius: 40.0),
+                            ],
+                          );
+                        }),
+                  ],
                 ),
-                Text(
-                  document['description'],
-                  maxLines: 4,
-                  overflow: TextOverflow.fade,
-                  softWrap: true,
-                  style: TextStyle(fontSize: 24.0),
-                ),
-                StreamBuilder(
-                    stream: Firestore.instance
-                        .collection('users')
-                        .document(document['author'])
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return new Text("Chargement ... ");
-                      }
-                      Profile profile = Profile.fromDocSnapshot(snapshot.data);
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          Text(profile.getFullName()),
-                          Text('P' + profile.promo),
-                          profile.getCircleAvatar(radius: 40.0),
-                        ],
-                      );
-                    }),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.depth == 0) {
+      if (notification is UserScrollNotification) {
+        final UserScrollNotification userScroll = notification;
+        switch (userScroll.direction) {
+          case ScrollDirection.forward:
+            if (userScroll.metrics.maxScrollExtent !=
+                userScroll.metrics.minScrollExtent) {
+              _hideFabAnimation.forward();
+            }
+            break;
+          case ScrollDirection.reverse:
+            if (userScroll.metrics.maxScrollExtent !=
+                userScroll.metrics.minScrollExtent) {
+              _hideFabAnimation.reverse();
+            }
+            break;
+          case ScrollDirection.idle:
+            break;
+        }
+      }
+    }
+    return false;
   }
 }
 

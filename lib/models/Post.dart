@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Post {
-  String key;
+  String id;
   String title;
   String description;
   String author;
+  String imageURL;
   DateTime creationDate;
   DateTime startDate;
   DateTime endDate;
@@ -14,10 +15,11 @@ class Post {
   Post.create({this.startDate});
 
   Post.fromDocSnapshot(DocumentSnapshot document) {
-    key = document.documentID;
+    id = document.documentID;
     title = document['title'];
     description = document['description'];
     author = document['author'];
+    imageURL = document['imageURL'];
     creationDate = document['creationDate'] != null
         ? document['creationDate'].toDate()
         : null;
@@ -32,6 +34,7 @@ class Post {
       "description": this.description,
       "author": this.author,
       "creationDate": FieldValue.serverTimestamp(),
+      "imageURL": this.imageURL,
       "startDate": this.startDate,
       "endDate": this.endDate
     };

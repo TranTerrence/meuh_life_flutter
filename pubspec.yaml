@@ -1,4 +1,4 @@
-name: meuh_life
+name: meuh_life #TODO Change the name of the app, Add icon launch (especially iOS)
 description: Meuh Life App
 version: 1.0.0+1
 
@@ -11,8 +11,12 @@ dependencies:
   cupertino_icons: ^0.1.2
   shared_preferences: ^0.5.7
   cached_network_image: ^2.2.0
-  firebase_auth: ^0.14.0+5
+  image_cropper: ^1.2.1
+  image_picker: ^0.6.6+1 # Add image picker to iOS
+  firebase_auth: ^0.14.0+5 # TODO Add firebase to iOS config
   firebase_database: ^3.0.7
+  firebase_storage: ^3.1.5
+  firebase_image: ^0.1.5
   cloud_firestore: ^0.13.5
   flutter_boom_menu: ^1.0.2
   flutter_localizations:

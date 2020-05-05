@@ -6,10 +6,11 @@ import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/services/authentication.dart';
 
 class ProfileScreen extends StatefulWidget {
-  ProfileScreen(this.userID, this.auth);
+  ProfileScreen(this.userID, this.auth, this.signOut);
 
   final BaseAuth auth;
   final String userID;
+  final VoidCallback signOut;
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
@@ -159,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             borderRadius: new BorderRadius.circular(30.0)),
                         color: Colors.blue.shade800,
                         child: new Text('Se déconnecter'),
-                        onPressed: () => widget.auth.signOut(),
+                        onPressed: () => widget.signOut(),
                       ),
                     ],
                   ),
