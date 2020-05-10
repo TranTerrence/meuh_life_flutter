@@ -33,7 +33,7 @@ class Post {
       "title": this.title,
       "description": this.description,
       "author": this.author,
-      "creationDate": FieldValue.serverTimestamp(),
+      "creationDate": this.creationDate ?? FieldValue.serverTimestamp(),
       "imageURL": this.imageURL,
       "startDate": this.startDate,
       "endDate": this.endDate

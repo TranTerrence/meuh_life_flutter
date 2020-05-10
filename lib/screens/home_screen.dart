@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meuh_life/screens/chat_screen.dart';
 import 'package:meuh_life/screens/market_screen.dart';
 import 'package:meuh_life/screens/profile_screen.dart';
 import 'package:meuh_life/services/authentication.dart';
@@ -127,9 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
     List<Widget> _widgetOptions = <Widget>[
       ProfileScreen(widget.userId, widget.auth, signOut),
       MarketScreen(),
-      Text(
-        'Index 2: Chats',
-      ),
+      ChatScreen(),
     ];
     return SafeArea(
       child: new Scaffold(
