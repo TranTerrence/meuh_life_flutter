@@ -2,7 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Profile.dart';
+import 'package:meuh_life/screens/create_organisation_screen.dart';
+import 'package:meuh_life/services/DatabaseService.dart';
 import 'package:meuh_life/services/authentication.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -18,6 +21,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Profile _profile;
+  DatabaseService database = DatabaseService();
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +29,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: StreamBuilder(
-            stream: Firestore.instance
-                .collection('users')
-                .document(widget.userID)
-                .snapshots(),
+            stream: database.getProfileStream(widget.userID),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return new Text("Chargement ... ");
               }
-              _profile = Profile.fromDocSnapshot(snapshot.data);
+              _profile = snapshot.data;
               return Column(
                 children: [
                   showAvatar(),
@@ -142,6 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
+                  showOrganisations(),
                   ButtonBar(
                     alignment: MainAxisAlignment.spaceEvenly,
                     mainAxisSize: MainAxisSize.max,
@@ -201,9 +203,121 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget showOrganisations() {
+    return Card(
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Organisations',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Container(
+              child: StreamBuilder(
+                  stream: database.getMemberListStream(userID: widget.userID),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return Center(
+                        child: Text('No Member data for ${widget.userID}'),
+                      );
+                    } else {
+                      List<Member> members = snapshot.data;
+                      return ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: members.length,
+                          itemBuilder: (context, index) {
+                            Member member = members[index];
+                            return buildMember(context, member);
+                          });
+                    }
+                  }),
+            ),
+            Center(
+              child: OutlineButton.icon(
+                onPressed: () =>
+                {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            CreateOrganisationScreen(widget.userID)),
+                  ),
+                },
+                icon: Icon(
+                  Icons.add,
+                  color: Colors.blue.shade800,
+                ),
+                label: Text('Créer une organisation'),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
   updateGapYear(value) {
     DocumentReference ref =
         Firestore.instance.document("users/" + widget.userID);
     ref.updateData({"gapYear": value});
+  }
+
+  Widget buildMember(BuildContext context, Member member) {
+    return StreamBuilder(
+        stream: database.getOrganisationStream(member.organisationID),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(
+              child: Text('No Organisation Data for this member'),
+            );
+          } else {
+            Organisation organisation = snapshot.data;
+            return Container(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    organisation.getCircleAvatar(radius: 24.0),
+                    SizedBox(
+                      width: 8.0,
+                    ),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(organisation.fullName,
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          if (member.position != '') Text(member.position),
+                          Text(member.getRole()),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          '${organisation.members.length}',
+                          style: TextStyle(
+                              fontSize: 18.0, color: Colors.blue.shade800),
+                        ),
+                        Icon(
+                          organisation.members.length == 1
+                              ? Icons.person
+                              : Icons.people,
+                          color: Colors.blue.shade800,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+        });
   }
 }

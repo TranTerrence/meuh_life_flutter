@@ -12,7 +12,7 @@ dependencies:
   shared_preferences: ^0.5.7
   cached_network_image: ^2.2.0
   image_cropper: ^1.2.1
-  image_picker: ^0.6.6+1 # Add image picker to iOS
+  image_picker: ^0.6.6+1 # TODO: Add image picker to iOS
   firebase_auth: ^0.14.0+5 # TODO Add firebase to iOS config
   firebase_database: ^3.0.7
   firebase_storage: ^3.1.5

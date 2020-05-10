@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_image/firebase_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:meuh_life/models/Post.dart';
 import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/screens/create_post_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:meuh_life/services/DatabaseService.dart';
 
 class MarketScreen extends StatefulWidget {
   @override
@@ -16,10 +15,11 @@ class MarketScreen extends StatefulWidget {
 
 class _MarketScreenState extends State<MarketScreen>
     with TickerProviderStateMixin<MarketScreen> {
-  //final String userID = getUserID();
+  //final String userID = await SharedPref.getUserID();
   String _locale = 'fr';
   DateFormat format = DateFormat('EEEE dd MMMM à HH:mm');
   AnimationController _hideFabAnimation;
+  DatabaseService database = DatabaseService();
 
   @override
   initState() {
@@ -64,18 +64,21 @@ class _MarketScreenState extends State<MarketScreen>
   Widget showPostList() {
     return (Container(
       child: StreamBuilder(
-        stream: Firestore.instance.collection('posts').snapshots(),
+        stream: database.getPostListStream(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return Center(
-              child: Text('No data'),
+              child: Text('No Post data'),
             );
           } else {
+            List<Post> posts = snapshot.data;
             return ListView.builder(
               padding: EdgeInsets.all(10.0),
-              itemBuilder: (context, index) =>
-                  buildItem(context, snapshot.data.documents[index]),
-              itemCount: snapshot.data.documents.length,
+              itemBuilder: (context, index) {
+                Post post = posts[index];
+                return buildPost(context, post);
+              },
+              itemCount: posts.length,
             );
           }
         },
@@ -83,8 +86,7 @@ class _MarketScreenState extends State<MarketScreen>
     ));
   }
 
-  Widget buildItem(BuildContext context, DocumentSnapshot document) {
-    Post post = new Post.fromDocSnapshot(document);
+  Widget buildPost(BuildContext context, Post post) {
     DateFormat format = DateFormat('EE\ndd/MM\nHH:mm');
 
     return Container(
@@ -118,21 +120,17 @@ class _MarketScreenState extends State<MarketScreen>
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 18.0),
                     ),
-                    if (post.imageURL.length > 0 && post.imageURL != null)
+                    if (post.imageURL != null && post.imageURL.length > 0)
                       Image(
                         image: FirebaseImage(post.imageURL),
                       ),
                     StreamBuilder(
-                        stream: Firestore.instance
-                            .collection('users')
-                            .document(document['author'])
-                            .snapshots(),
+                        stream: database.getProfileStream(post.author),
                         builder: (context, snapshot) {
                           if (!snapshot.hasData) {
                             return new Text("Chargement ... ");
                           }
-                          Profile profile =
-                          Profile.fromDocSnapshot(snapshot.data);
+                          Profile profile = snapshot.data;
                           return Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             crossAxisAlignment: CrossAxisAlignment.end,
@@ -182,10 +180,4 @@ class _MarketScreenState extends State<MarketScreen>
     }
     return false;
   }
-}
-
-getUserID() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String userID = prefs.getString('userID');
-  return userID;
 }
