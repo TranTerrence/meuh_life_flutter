@@ -1,23 +1,21 @@
-import 'package:firebase_image/firebase_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:intl/intl.dart';
 import 'package:meuh_life/models/Post.dart';
-import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/screens/create_post_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
 
 class MarketScreen extends StatefulWidget {
+  MarketScreen(this.userID);
+
+  final String userID;
+
   @override
   _MarketScreenState createState() => _MarketScreenState();
 }
 
 class _MarketScreenState extends State<MarketScreen>
     with TickerProviderStateMixin<MarketScreen> {
-  //final String userID = await SharedPref.getUserID();
-  String _locale = 'fr';
-  DateFormat format = DateFormat('EEEE dd MMMM à HH:mm');
   AnimationController _hideFabAnimation;
   DatabaseService database = DatabaseService();
 
@@ -26,6 +24,7 @@ class _MarketScreenState extends State<MarketScreen>
     super.initState();
     _hideFabAnimation =
         AnimationController(vsync: this, duration: kThemeAnimationDuration);
+    _hideFabAnimation.forward();
   }
 
   @override
@@ -42,11 +41,11 @@ class _MarketScreenState extends State<MarketScreen>
         floatingActionButton: ScaleTransition(
           scale: _hideFabAnimation,
           child: FloatingActionButton(
-            onPressed: () =>
-            {
+            onPressed: () => {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => CreatePostScreen()),
+                MaterialPageRoute(
+                    builder: (context) => CreatePostScreen(widget.userID)),
               ),
             },
             child: Icon(
@@ -76,7 +75,7 @@ class _MarketScreenState extends State<MarketScreen>
               padding: EdgeInsets.all(10.0),
               itemBuilder: (context, index) {
                 Post post = posts[index];
-                return buildPost(context, post);
+                return post.getCard(context, database);
               },
               itemCount: posts.length,
             );
@@ -84,76 +83,6 @@ class _MarketScreenState extends State<MarketScreen>
         },
       ),
     ));
-  }
-
-  Widget buildPost(BuildContext context, Post post) {
-    DateFormat format = DateFormat('EE\ndd/MM\nHH:mm');
-
-    return Container(
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: <Widget>[
-              Text(
-                post.startDate != null
-                    ? format.format(post.startDate)
-                    : format.format(post.creationDate),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(
-                width: 8.0,
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      post.title,
-                      style: TextStyle(fontSize: 40.0),
-                    ),
-                    Text(
-                      post.description,
-                      softWrap: true,
-                      maxLines: 5,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 18.0),
-                    ),
-                    if (post.imageURL != null && post.imageURL.length > 0)
-                      Image(
-                        image: FirebaseImage(post.imageURL),
-                      ),
-                    StreamBuilder(
-                        stream: database.getProfileStream(post.author),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return new Text("Chargement ... ");
-                          }
-                          Profile profile = snapshot.data;
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: <Widget>[
-                              Text(
-                                '${profile.firstName} ${profile.lastName[0]}.'
-                                    '\n(P${profile.promo})',
-                              ),
-                              SizedBox(
-                                width: 8.0,
-                              ),
-                              profile.getCircleAvatar(radius: 40.0),
-                            ],
-                          );
-                        }),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   bool _handleScrollNotification(ScrollNotification notification) {

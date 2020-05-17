@@ -2,6 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_image/firebase_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:meuh_life/components/RoundedDialog.dart';
+import 'package:meuh_life/services/DatabaseService.dart';
+
+import 'Profile.dart';
 
 class Organisation {
   String id = '';
@@ -23,6 +27,16 @@ class Organisation {
     this.creatorID = document['creatorID']; //userID of the creator
     this.isVerified = document['isVerified'];
     this.members = List<String>.from(document['members']); // List of members
+  }
+
+  Organisation.fromMap(Map<String, dynamic> map, String organisationID) {
+    this.id = organisationID;
+    this.fullName = map['fullName'];
+    this.imageURL = map['imageURL'];
+    this.description = map['description'];
+    this.creatorID = map['creatorID']; //userID of the creator
+    this.isVerified = map['isVerified'];
+    this.members = List<String>.from(map['members']); // List of members
   }
 
   addMember(String memberID) {
@@ -58,12 +72,92 @@ class Organisation {
                 )
               : Icon(
                   Icons.photo,
-                  color: Colors.amber.shade800,
+                  color: Colors.white,
                   size: 32.0,
                 ),
         ),
       );
     }
+  }
+
+  Future<void> showDetailedDialog(BuildContext context,
+      Organisation organisation) async {
+    DatabaseService database = DatabaseService();
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (context, setStateDialog) {
+          return RoundedDialog(
+            circleAvatar: organisation.getCircleAvatar(radius: 60.0),
+            circleRadius: 60.0,
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // To make the card compact
+              children: <Widget>[
+                Center(
+                  child: Text(
+                    organisation.fullName,
+                    style: TextStyle(
+                      fontSize: 24.0,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16.0),
+                Text(
+                  organisation.description,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16.0,
+                  ),
+                ),
+                SizedBox(height: 24.0),
+                Text(
+                  'Membres',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                StreamBuilder(
+                    stream: database.getMemberListStream(
+                        on: 'organisationID', onValueEqualTo: organisation.id),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return Center(
+                          child: Text(
+                              'No Member data for organisation  ${organisation
+                                  .id}'),
+                        );
+                      } else {
+                        List<Member> members = snapshot.data;
+                        return ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: members.length,
+                            itemBuilder: (context, index) {
+                              Member member = members[index];
+                              return member.getListItem(database, member);
+                            });
+                      }
+                    }),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: FlatButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // To close the dialog
+                    },
+                    child: Text(
+                      'Fermer',
+                      style: TextStyle(color: Colors.blue.shade800),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        });
+      },
+    );
   }
 
   toJson() {
@@ -113,8 +207,59 @@ class Member {
         : null;
   }
 
+  Member.fromMap(Map<String, dynamic> map, String memberID) {
+    this.id = memberID;
+    this.userID = map['userID']; // userID of the member
+    this.organisationID = map['organisationID'];
+    this.role = map['role'];
+    this.position = map['position']; // President, tresorier ,...
+    this.addedBy = map['addedBy'];
+    //this.joiningDate = map['joiningDate'] != null ? map['joiningDate'].toDate() : null;
+  }
+
+  Widget getListItem(DatabaseService database, Member member) {
+    return StreamBuilder(
+        stream: database.getProfileStream(member.userID),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(
+              child: Text('No Data for this member'),
+            );
+          } else {
+            Profile profile = snapshot.data;
+            return Container(
+              padding: EdgeInsets.only(top: 8.0),
+              child: Row(
+                children: <Widget>[
+                  profile.getCircleAvatar(radius: 40.0),
+                  SizedBox(
+                    width: 8.0,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        profile.getFullName() + ' (${profile.getPromo()})',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      if (member.position != '') Text(member.position)
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }
+        });
+  }
+
   String getRole() {
     return roles[this.role];
+  }
+
+  Future<Organisation> getOrganisation() async {
+    DatabaseService database = DatabaseService();
+    Organisation orga = await database.getOrganisation(this.organisationID);
+    return orga;
   }
 
   toJson() {
@@ -145,4 +290,11 @@ class Member {
         return this.joiningDate;
     }
   }
+}
+
+class Consts {
+  Consts._();
+
+  static const double padding = 16.0;
+  static const double avatarRadius = 60.0;
 }

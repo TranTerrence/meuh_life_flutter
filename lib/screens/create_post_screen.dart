@@ -1,25 +1,49 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Post.dart';
+import 'package:meuh_life/models/Profile.dart';
+import 'package:meuh_life/services/DatabaseService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CreatePostScreen extends StatefulWidget {
+  CreatePostScreen(this.userID);
+
+  final String userID;
+
   @override
   _CreatePostScreenState createState() => _CreatePostScreenState();
 }
 
 class _CreatePostScreenState extends State<CreatePostScreen> {
   final _formKey = GlobalKey<FormState>();
-  Post _post = Post.create(startDate: DateTime.now());
+  Post _post = Post(type: 'ANNOUNCE', asOrganisation: '');
+  String appBarTitle = 'Ajouter une annonce';
+  String submitButtonName = "Créer l'annonce";
+
+  List<DropdownMenuItem<String>> _dropDownList = [];
+
+  //Event attributes
+  DateTime _startDate = DateTime.now();
+  DateTime _endDate = DateTime.now();
+  double _price;
+  String _location;
+
+  //End Event attributes
+
+  DatabaseService database = DatabaseService();
+
   String _locale = 'fr';
   DateFormat format = DateFormat('EEEE dd MMMM à HH:mm');
   File _imageFile;
@@ -38,7 +62,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       androidUiSettings: AndroidUiSettings(
           toolbarTitle: 'Recadrer',
           toolbarColor: Colors.blue.shade800,
-          activeWidgetColor: Colors.blue.shade800,
+          //activeWidgetColor: Colors.blue.shade800,
           toolbarWidgetColor: Colors.white,
           activeControlsWidgetColor: Colors.amber.shade800,
           initAspectRatio: CropAspectRatioPreset.original,
@@ -59,10 +83,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   /// Select an image via gallery or camera
   Future<void> _pickImage(ImageSource source) async {
     File selected =
-    await ImagePicker.pickImage(source: source, imageQuality: 50);
+        await ImagePicker.pickImage(source: source, imageQuality: 50);
 
     setState(() {
       _imageFile = selected;
+      _cropImage();
     });
   }
 
@@ -87,7 +112,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade800,
-        title: Text('Ajouter un post'),
+        title: Text(appBarTitle),
       ),
       body: SingleChildScrollView(
         child: Form(
@@ -96,35 +121,24 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 0),
             child: Column(
               children: <Widget>[
+                showSelectPublisher(),
                 showTitleField(),
                 showDescriptionField(),
                 SizedBox(
                   height: 16.0,
                 ),
                 Container(
-                  padding: EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color: _imageFile != null
-                            ? Colors.blue.shade800
-                            : Colors.grey,
-                        width: _imageFile != null ? 3.0 : 1.0),
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(5.0),
-                    ),
-                  ),
+                  //padding: EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
                   child: Column(
                     children: <Widget>[
-                      Text(
-                        'Ajouter une image',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
                       showImagePickerButtons(),
                       if (_imageFile != null) showSelectedImage(),
                     ],
                   ),
                 ),
-                showDateStartField(),
+                showTypeField(),
+                if (_post.type == 'EVENT') showEventFields(),
+                if (_post.type == 'INTERNSHIP') showStageFields(),
                 showSubmitButton(),
               ],
             ),
@@ -132,6 +146,83 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         ),
       ),
     );
+  }
+
+  Widget showSelectPublisher() {
+    return FutureBuilder<List<DropdownMenuItem<String>>>(
+      future: getDropDownAs(),
+      builder:
+          (context, AsyncSnapshot<List<DropdownMenuItem<String>>> snapshot) {
+        if (!snapshot.hasData) {
+          return Center(
+            child: Text('No Member data for ${widget.userID}'),
+          );
+        } else {
+          List<DropdownMenuItem<String>> list = snapshot.data;
+          //Get each organisation for each membership
+          return Container(
+            decoration: new BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(30.0)),
+                border: new Border.all(color: Colors.grey)),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                items: list,
+                value: _post.asOrganisation,
+                icon: Icon(Icons.arrow_drop_down),
+                onChanged: (String newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _post.asOrganisation = newValue;
+                    });
+                  }
+                },
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Future<List<DropdownMenuItem<String>>> getDropDownAs() async {
+    double avatarRadius = 24.0;
+    double itemHeight = 54.0;
+    List<DropdownMenuItem<String>> list = [];
+    List<Organisation> organisations =
+    await database.getOrganisationListOf(widget.userID);
+    organisations.forEach((organisation) {
+      list.add(DropdownMenuItem<String>(
+        value: organisation.id,
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              height: itemHeight,
+            ),
+            organisation.getCircleAvatar(radius: avatarRadius),
+            SizedBox(
+              width: 8.0,
+            ),
+            Text(organisation.fullName),
+          ],
+        ),
+      ));
+    });
+    Profile profile = await database.getProfile(widget.userID);
+    list.add(DropdownMenuItem<String>(
+        value: '',
+        child: Row(
+          children: <Widget>[
+            SizedBox(
+              height: itemHeight,
+            ),
+            profile.getCircleAvatar(radius: avatarRadius),
+            SizedBox(
+              width: 8.0,
+            ),
+            Text(profile.getFullName()),
+          ],
+        )));
+    return list;
   }
 
   Widget showTitleField() {
@@ -148,6 +239,65 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         }
         return null;
       },
+    );
+  }
+
+  Widget showTypeField() {
+    List<DropdownMenuItem<String>> list = [];
+    Post.TYPES.forEach((key, value) {
+      list.add(DropdownMenuItem<String>(
+        value: key,
+        child: Row(
+          children: <Widget>[
+            Post.TYPES_ICON[key],
+            SizedBox(
+              width: 8.0,
+            ),
+            Text(value),
+          ],
+        ),
+      ));
+    });
+    return Row(
+      children: <Widget>[
+        Text(
+          'Type de post: ',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            items: list,
+            value: _post.type,
+            icon: Icon(Icons.arrow_drop_down),
+            onChanged: (String newValue) {
+              setState(() {
+                _post.type = newValue;
+                switch (_post.type) {
+                  case 'EVENT':
+                    {
+                      appBarTitle = 'Ajouter un événement';
+                      submitButtonName = "Créer l'événement";
+                    }
+                    break;
+                  case 'ANNOUNCE':
+                    {
+                      appBarTitle = 'Ajouter une annonce';
+                      submitButtonName = "Créer l'annonce";
+                    }
+                    break;
+
+                  case 'INTERNSHIP':
+                    {
+                      appBarTitle = 'Ajouter un stage';
+                      submitButtonName = "Créer le stage";
+                    }
+                    break;
+                }
+              });
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -175,7 +325,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       padding: const EdgeInsets.only(top: 32.0),
       child: TextField(
         controller: TextEditingController()
-          ..text = format.format(_post.startDate),
+          ..text = format.format(_startDate),
         readOnly: true,
         decoration: InputDecoration(
           labelText: 'Date de début',
@@ -186,16 +336,16 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 showDatePicker(
                   locale: Locale(_locale),
                   context: context,
-                  initialDate: _post.startDate,
+                  initialDate: _startDate,
                   firstDate: DateTime(2019),
                   lastDate: DateTime(2022),
                 ).then((date) {
                   setState(() {
-                    _post.startDate = date;
+                    if (date != null) _startDate = date;
                   });
                   showTimePicker(
                     context: context,
-                    initialTime: TimeOfDay.fromDateTime(_post.startDate),
+                    initialTime: TimeOfDay.fromDateTime(_startDate),
                     builder: (BuildContext context, Widget child) {
                       return Localizations.override(
                         context: context,
@@ -205,10 +355,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     },
                   ).then((time) {
                     setState(() {
-                      _post.startDate = new DateTime(
-                          _post.startDate.year,
-                          _post.startDate.month,
-                          _post.startDate.day,
+                      _startDate = new DateTime(
+                          _startDate.year,
+                          _startDate.month,
+                          _startDate.day,
                           time.hour,
                           time.minute);
                     });
@@ -217,6 +367,116 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               }),
         ),
       ),
+    );
+  }
+
+  Widget showDateEndField() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 32.0),
+      child: TextFormField(
+        controller: TextEditingController()
+          ..text = format.format(_endDate),
+        readOnly: true,
+        validator: (value) {
+          if (_endDate.isBefore(_startDate)) {
+            return "La date de fin doit être aprés la date de début";
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          labelText: 'Date de fin',
+          border: OutlineInputBorder(),
+          suffixIcon: IconButton(
+              icon: Icon(Icons.calendar_today),
+              onPressed: () {
+                showDatePicker(
+                  locale: Locale(_locale),
+                  context: context,
+                  initialDate: _endDate,
+                  firstDate: DateTime.now().subtract(Duration(days: 31)),
+                  lastDate: DateTime.now().add(Duration(days: 365)),
+                ).then((date) {
+                  setState(() {
+                    if (date != null) _endDate = date;
+                  });
+                  showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.fromDateTime(_endDate),
+                    builder: (BuildContext context, Widget child) {
+                      return Localizations.override(
+                        context: context,
+                        locale: Locale(_locale),
+                        child: child,
+                      );
+                    },
+                  ).then((time) {
+                    setState(() {
+                      _endDate = new DateTime(_endDate.year, _endDate.month,
+                          _endDate.day, time.hour, time.minute);
+                    });
+                  });
+                });
+              }),
+        ),
+      ),
+    );
+  }
+
+  Widget showLocationField() {
+    return TextFormField(
+      onSaved: (String value) {
+        _location = value;
+      },
+      decoration: const InputDecoration(
+        labelText: 'Lieu (optionnel)',
+        prefixIcon: Icon(Icons.place),
+      ),
+    );
+  }
+
+  Widget showPriceField() {
+    return TextFormField(
+      onSaved: (String value) {
+        if (value != null) _price = double.parse(value);
+      },
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        new WhitelistingTextInputFormatter(
+            new RegExp('[0-9]*([\.])?[0-9]*')) // Allow only numbers and dots
+      ],
+      decoration: const InputDecoration(
+        labelText: 'Prix (optionnel)',
+        prefixIcon: Icon(Icons.euro_symbol),
+      ),
+      validator: (value) {
+        if ('.'
+            .allMatches(value)
+            .length > 1) {
+          return "Le prix entrée n'est pas valide";
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget showEventFields() {
+    return Column(
+      children: <Widget>[
+        showDateStartField(),
+        showDateEndField(),
+        showLocationField(),
+        showPriceField()
+      ],
+    );
+  }
+
+  Widget showStageFields() {
+    return Column(
+      children: <Widget>[
+        showDateStartField(),
+        showDateEndField(),
+        showLocationField(),
+      ],
     );
   }
 
@@ -293,12 +553,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 _formKey.currentState.save();
                 uploadDataToFirebase();
                 Navigator.pop(context);
-                print(
-                    'title: ${_post.title} and description: ${_post.description} startDate ${_post.startDate}');
               }
             },
             child: Text(
-              'Créer le post',
+              submitButtonName,
               style: TextStyle(fontSize: 16.0),
             ),
           ),
@@ -310,6 +568,26 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   void uploadDataToFirebase() async {
     print('SENDING DATA TO FIRESTORE');
     print(_post);
+    //Cast the post to it's right child class
+    switch (_post.type) {
+      case 'EVENT':
+        {
+          //_post is now of type Event which extends post
+          _post = _post.toEvent(
+              startDate: _startDate,
+              endDate: _endDate,
+              price: _price,
+              location: _location);
+        }
+        break;
+      case 'ANNOUNCE':
+        {}
+        break;
+
+      case 'INTERNSHIP':
+        {}
+        break;
+    }
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _post.author = prefs.getString('userID');
@@ -317,13 +595,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     DocumentReference docRef =
     Firestore.instance.collection('posts').document();
 
+    print(_post.toJson());
     docRef.setData(_post.toJson());
 
     if (_imageFile != null) {
       _post.imageURL =
-      'gs://meuh-life.appspot.com/posts_images/${docRef.documentID}';
+      'gs://meuhlife.appspot.com/posts_images/${docRef.documentID}';
       FirebaseStorage storage =
-      FirebaseStorage(storageBucket: 'gs://meuh-life.appspot.com/');
+      FirebaseStorage(storageBucket: 'gs://meuhlife.appspot.com/');
       String filePath = 'posts_images/${docRef.documentID}';
       StorageUploadTask uploadTask =
       storage.ref().child(filePath).putFile(_imageFile);
@@ -335,8 +614,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     print('SENDING DATA TO Storage');
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String userID = prefs.getString('userID');
+
     FirebaseStorage storage =
-    FirebaseStorage(storageBucket: 'gs://meuh-life.appspot.com/');
+    FirebaseStorage(storageBucket: 'gs://meuhlife.appspot.com/');
     String filePath = 'posts_images/$userID';
     storage.ref().child(filePath).putFile(_imageFile);
   }

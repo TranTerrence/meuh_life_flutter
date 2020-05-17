@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_image/firebase_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -11,19 +12,43 @@ class Profile {
   String lastName = '';
   String picUrl = '';
   String description = '';
+  String type = 'ENGINEER';
+
+  DateTime creationDate;
 
   bool isEmailVerified = false;
   bool gapYear = false;
+  bool isPAM = false;
 
-  Profile(String firstName, String lastName, String promo, bool gapYear) {
+  static const types = {
+    'ENGINEER': 'Cycle ingénieur',
+    'ISUPFERE': 'ISUPFERE',
+    'MASTER': 'Master spécialisé',
+  };
+
+  Profile(
+      {String id,
+      String promo,
+      String firstName,
+      String lastName,
+      String picUrl,
+      String description,
+      String type,
+      DateTime creationDate,
+      bool isEmailVerified,
+      bool gapYear,
+      bool isPAM}) {
     this.email =
         (firstName + '.' + lastName + '@mines-paristech.fr').toLowerCase();
     this.promo = promo;
     this.firstName = capitalize(firstName);
     this.lastName = capitalize(lastName);
     this.picUrl = createPicUrl(lastName, promo);
+    this.type = type;
+    this.creationDate = creationDate;
     this.gapYear = gapYear;
     this.isEmailVerified = false;
+    this.isPAM = isPAM;
   }
 
   Profile.fromDocSnapshot(DocumentSnapshot document) {
@@ -36,6 +61,11 @@ class Profile {
     this.gapYear = document['gapYear'];
     this.isEmailVerified = document['isEmailVerified'];
     this.description = document['description'];
+    this.isPAM = document['isPAM'];
+    this.creationDate = document['creationDate'] != null
+        ? document['creationDate'].toDate()
+        : null;
+    this.type = document['type'];
   }
 
   toJson() {
@@ -48,7 +78,10 @@ class Profile {
       "picUrl": this.picUrl,
       "gapYear": this.gapYear,
       "isEmailVerified": this.isEmailVerified,
-      "description": this.description
+      "description": this.description,
+      "isPAM": this.isPAM,
+      "type": this.type,
+      "creationDate": this.creationDate ?? FieldValue.serverTimestamp(),
     };
   }
 
@@ -56,33 +89,43 @@ class Profile {
     return this.firstName + ' ' + this.lastName;
   }
 
+  String getType() {
+    return types[this.type];
+  }
+
+  String getPromo() {
+    return 'P${this.promo}';
+  }
+
   String getNameInitials() {
     return this.firstName[0] + this.lastName[0];
   }
 
-  Widget getCircleAvatar({double radius = 120.0}) {
+  Widget getCircleAvatar({double radius = 60.0}) {
+    if (this.picUrl.startsWith('gs://')) {
+      return CircleAvatar(
+        backgroundImage: FirebaseImage(this.picUrl),
+        radius: radius,
+      );
+    }
     return CachedNetworkImage(
       imageUrl: this.picUrl,
       imageBuilder: (context, imageProvider) => Container(
-        width: radius,
-        height: radius,
+        width: radius * 2,
+        height: radius * 2,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.blue.shade800,
-            width: 2,
-          ),
           image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
         ),
       ),
       placeholder: (context, url) => CircularProgressIndicator(),
       errorWidget: (context, url, error) => CircleAvatar(
-        radius: radius / 2,
+        radius: radius,
         backgroundColor: Colors.blue.shade800,
         child: Text(
           this.getNameInitials(),
           style: TextStyle(
-            fontSize: radius / 2,
+            fontSize: radius,
             color: Colors.white,
           ),
         ),

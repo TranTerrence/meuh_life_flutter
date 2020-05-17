@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/services/authentication.dart';
+import 'package:meuh_life/services/utils.dart';
 
 class ConnexionScreen extends StatefulWidget {
   ConnexionScreen({this.auth, this.loginCallback});
@@ -21,8 +22,10 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
   String _password;
   String _promo;
   String _errorMessage;
-
+  String _type = 'ENGINEER';
   bool _gapYear = false;
+  bool _isPAM = false;
+
   bool _isLoginForm;
   bool _isLoading;
   bool _passwordVisible = false;
@@ -49,7 +52,13 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
       String _firstName = splitFullName[0];
       String _lastName = splitFullName[1];
 
-      Profile profile = new Profile(_firstName, _lastName, _promo, _gapYear);
+      Profile profile = new Profile(
+          firstName: _firstName,
+          lastName: _lastName,
+          promo: _promo,
+          gapYear: _gapYear,
+          isPAM: _isPAM,
+          type: _type);
       print('LOGGING');
 
       try {
@@ -63,7 +72,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
 
           userId = await widget.auth.signUp(profile.email, _password);
           widget.auth.sendEmailVerification();
-          _showVerifyEmailSentDialog();
+          _showVerifyEmailSentDialog(profile.email);
           print('Signed up user: $userId');
           profile.id = userId;
           Firestore.instance
@@ -83,9 +92,13 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
         setState(() {
           _isLoading = false;
           _errorMessage = e.message;
-          _formKey.currentState.reset();
+          //_formKey.currentState.reset();
         });
       }
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -99,13 +112,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
     super.initState();
   }
 
-  void resetForm() {
-    _formKey.currentState.reset();
-    _errorMessage = "";
-  }
-
   void toggleFormMode() {
-    resetForm();
     setState(() {
       _isLoginForm = !_isLoginForm;
     });
@@ -115,24 +122,21 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
   Widget build(BuildContext context) {
     return new Scaffold(
         body: Stack(
-          children: <Widget>[
-            _showForm(),
-            _showCircularProgress(),
-          ],
-        ));
+      children: <Widget>[
+        _showForm(),
+        _showCircularProgress(),
+      ],
+    ));
   }
 
   Widget _showCircularProgress() {
     if (_isLoading) {
       return Center(child: CircularProgressIndicator());
     }
-    return Container(
-      height: 0.0,
-      width: 0.0,
-    );
+    return Container();
   }
 
-  void _showVerifyEmailSentDialog() {
+  void _showVerifyEmailSentDialog(String email) {
     showDialog(
       barrierDismissible: false,
       context: context,
@@ -141,7 +145,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
         return AlertDialog(
           title: new Text("Vérifie ton email"),
           content: new Text(
-              "Le lien pour vérifier ton email a été envoyé, tu auras besoin de le valider pour pour pouvoir utiliser l'application"),
+              "Le lien pour vérifier ton email a été envoyé à \n$email \nTu auras besoin de le valider pour pour pouvoir utiliser l'application"),
           actions: <Widget>[
             new FlatButton(
               child: new Text("Fermer"),
@@ -149,7 +153,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
                 toggleFormMode();
                 Navigator.of(context).pop();
               },
-            ),
+            )
           ],
         );
       },
@@ -172,6 +176,8 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
                 SizedBox(height: 16.0),
                 if (!_isLoginForm) showPromoInput(),
                 if (!_isLoginForm) showGapYearInput(),
+                if (!_isLoginForm) showPAMInput(),
+                if (!_isLoginForm) showTypeSelect(),
                 showPrimaryButton(),
                 showSecondaryButton(),
                 showErrorMessage(),
@@ -312,6 +318,64 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
               })
         ],
       ),
+    );
+  }
+
+  Widget showPAMInput() {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _gapYear = !_gapYear;
+        });
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Icon(
+            Icons.home,
+            color: Colors.blue.shade800,
+          ),
+          Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16.0),
+                child: Text('PAM (Pas à la Meuh)'),
+              )),
+          Checkbox(
+              value: _isPAM,
+              onChanged: (bool value) =>
+              {
+                setState(() {
+                  _isPAM = value;
+                }),
+              })
+        ],
+      ),
+    );
+  }
+
+  Widget showTypeSelect() {
+    return Row(
+      children: <Widget>[
+        Icon(
+          Icons.school,
+          color: Colors.blue.shade800,
+        ),
+        SizedBox(
+          width: 16.0,
+        ),
+        DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: _type,
+            icon: Icon(Icons.arrow_drop_down),
+            onChanged: (String newValue) {
+              setState(() {
+                _type = newValue;
+              });
+            },
+            items: createDropdownMenuItemList(Profile.types),
+          ),
+        ),
+      ],
     );
   }
 
