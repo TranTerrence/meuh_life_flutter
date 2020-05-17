@@ -72,7 +72,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.of(context).pop();
                   _checkEmailVerification();
                 },
-                // TODO: Add a logout button
               ),
               new FlatButton(
                 child: new Text("Deconnexion"),
@@ -127,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     List<Widget> _widgetOptions = <Widget>[
       ProfileScreen(widget.userId, widget.auth, signOut),
-      MarketScreen(),
+      MarketScreen(widget.userId),
       ChatScreen(),
     ];
     return SafeArea(

@@ -1,102 +1,35 @@
 {
   "project_info": {
-    "project_number": "281219711549",
-    "firebase_url": "https://meuh-life.firebaseio.com",
-    "project_id": "meuh-life",
-    "storage_bucket": "meuh-life.appspot.com"
+    "project_number": "220986784705",
+    "firebase_url": "https://meuhlife.firebaseio.com",
+    "project_id": "meuhlife",
+    "storage_bucket": "meuhlife.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:281219711549:android:f0690528ebfb9f50",
-        "android_client_info": {
-          "package_name": "com.kindmine.meuhlife"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "281219711549-aoinse3j64s45kf6scar9kf5nes8f605.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.kindmine.meuhlife",
-            "certificate_hash": "2a36950a413efd5576dbc1e36278e2d3f4463ccf"
-          }
-        },
-        {
-          "client_id": "281219711549-44beepj97am3q1645nk8q7u2qiel2drc.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.kindmine.meuhlife",
-            "certificate_hash": "8b9e6721427b89399ee76bbf25ff90b5004b7ea7"
-          }
-        },
-        {
-          "client_id": "281219711549-p3624rjgrlhtnfv0via1b306dn3aqmv1.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.kindmine.meuhlife",
-            "certificate_hash": "ca58d5f28aff870e8d5151c1cfb9d3e2a6833436"
-          }
-        },
-        {
-          "client_id": "281219711549-2aomnv6otlsumtnrh0ir64rs5qomlaj4.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD2R-USzN7aID81maYDPGgIdES06vu9vo4"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "281219711549-2aomnv6otlsumtnrh0ir64rs5qomlaj4.apps.googleusercontent.com",
-              "client_type": 3
-            },
-            {
-              "client_id": "281219711549-lbc9c4di4ks35emac4qvgibcgq8jgtag.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "meuhlife.com"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:281219711549:android:e9f6cd5a00efc6bdcc2054",
+        "mobilesdk_app_id": "1:220986784705:android:eacccb6a474fe72fa00d40",
         "android_client_info": {
           "package_name": "com.terrence.meuhlife"
         }
       },
       "oauth_client": [
         {
-          "client_id": "281219711549-2aomnv6otlsumtnrh0ir64rs5qomlaj4.apps.googleusercontent.com",
+          "client_id": "220986784705-m25f620iras06qu4tfj28itckse2fhs0.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyD2R-USzN7aID81maYDPGgIdES06vu9vo4"
+          "current_key": "AIzaSyBziJV1XsjANOa5Gp45u4FM4oTkZRpf3j8"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "281219711549-2aomnv6otlsumtnrh0ir64rs5qomlaj4.apps.googleusercontent.com",
+              "client_id": "220986784705-m25f620iras06qu4tfj28itckse2fhs0.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "281219711549-lbc9c4di4ks35emac4qvgibcgq8jgtag.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "meuhlife.com"
-              }
             }
           ]
         }

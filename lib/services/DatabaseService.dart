@@ -10,9 +10,15 @@ import 'utils.dart';
 
 class DatabaseService {
   final FirebaseStorage storage =
-      FirebaseStorage(storageBucket: 'gs://meuh-life.appspot.com/');
+      FirebaseStorage(storageBucket: 'gs://meuhlife.appspot.com/');
 
   // -start- PROFILE Getters
+  Future<Profile> getProfile(String userID) async {
+    CollectionReference userCollection = Firestore.instance.collection('users');
+    DocumentSnapshot document = await userCollection.document(userID).get();
+    return Profile.fromDocSnapshot(document);
+  }
+
   Stream<Profile> getProfileStream(String userID) {
     CollectionReference userCollection = Firestore.instance.collection('users');
     return userCollection
@@ -48,6 +54,11 @@ class DatabaseService {
     return list;
   }
 
+  updateProfile(String userID, Map<String, dynamic> data) {
+    DocumentReference ref = Firestore.instance.document("users/" + userID);
+    ref.updateData(data);
+  }
+
   // -end- PROFILE Getters
 
   // -start- POST Getters
@@ -62,13 +73,23 @@ class DatabaseService {
 
   List<Post> _postListFromSnapshot(QuerySnapshot snapshot) {
     return snapshot.documents.map((doc) {
-      return Post.fromDocSnapshot(doc);
+      Post p = Post();
+      //Will cast the Post into the right children (Event, internship, ...)
+      return p.castFromDocSnapshot(doc);
     }).toList();
   }
 
   // -end- POST Getters
 
   // -start- ORGANISATION Getters
+  Future<Organisation> getOrganisation(String organisationID) async {
+    CollectionReference organisationCollection =
+    Firestore.instance.collection('organisations');
+    DocumentSnapshot document =
+    await organisationCollection.document(organisationID).get();
+    Organisation organisation = Organisation.fromDocSnapshot(document);
+    return organisation;
+  }
 
   Stream<Organisation> getOrganisationStream(String organisationID) {
     CollectionReference organisationCollection =
@@ -109,16 +130,17 @@ class DatabaseService {
     return docRef;
   }
 
-  Future<DocumentReference> createOrganisationAndMembers(
+  void createOrganisationAndMembers(
       Organisation organisation, List<Member> members, File imageFile) async {
     //TODO: create the Organisation document, then create all members document, get the ID and put it into the orga document
     CollectionReference organisationCollection =
         Firestore.instance.collection('organisations');
-    CollectionReference memberCollection =
-        Firestore.instance.collection('members');
+
     String currentUserID = await SharedPref.getUserID();
     DocumentReference orgRef = organisationCollection.document();
     String organisationID = orgRef.documentID;
+    CollectionReference memberCollection =
+    Firestore.instance.collection('organisations/$organisationID/members');
     await Future.forEach(members, (member) async {
       member.organisationID = organisationID;
       member.addedBy = currentUserID;
@@ -130,8 +152,7 @@ class DatabaseService {
     if (imageFile != null) {
       String collection = 'organisations_images';
       String fileName = organisationID;
-      organisation.imageURL =
-          'gs://meuh-life.appspot.com/$collection/$fileName';
+      organisation.imageURL = getFileURL(collection, fileName);
       this.uploadFile(imageFile, collection, fileName);
     }
     organisation.creatorID = currentUserID;
@@ -141,18 +162,53 @@ class DatabaseService {
   // -end- ORGANISATION Getters
 
   // -start- MEMBER Getters
-  //Get the member list of a user
+  //Get the member list of a user or an organisation
   Stream<List<Member>> getMemberListStream(
-      {String userID, String orderBy = 'joiningDate'}) {
+      {String on, String onValueEqualTo, String orderBy = 'joiningDate'}) {
     // TODO Later: Add optional query params
     CollectionReference memberCollection =
         Firestore.instance.collection('members');
 
     return memberCollection
         //.orderBy(orderBy, descending: true)
-        .where('userID', isEqualTo: userID)
+        .where(on, isEqualTo: onValueEqualTo)
         .snapshots()
         .map(_memberListFromSnapshot);
+  }
+
+  Future<List<Member>> getMemberList({String on, String onValueEqualTo}) async {
+    // TODO Later: Add optional query params
+    List<Member> memberList = [];
+    CollectionReference memberCollection =
+    Firestore.instance.collection('members');
+    QuerySnapshot querySnapshot = await memberCollection
+        .where(on, isEqualTo: onValueEqualTo)
+        .getDocuments();
+
+    querySnapshot.documents.forEach((result) {
+      memberList.add(Member.fromMap(result.data, result.documentID));
+    });
+    return memberList;
+  }
+
+  Future<List<Organisation>> getOrganisationListOf(String userID) async {
+    List<Member> memberList = [];
+    List<Organisation> organisationList = [];
+
+    CollectionReference memberCollection =
+    Firestore.instance.collection('members');
+    QuerySnapshot querySnapshot = await memberCollection
+        .where('userID', isEqualTo: userID)
+        .getDocuments();
+    querySnapshot.documents.forEach((result) {
+      memberList.add(Member.fromMap(result.data, result.documentID));
+    });
+
+    for (Member member in memberList) {
+      Organisation organisation = await getOrganisation(member.organisationID);
+      organisationList.add(organisation);
+    }
+    return organisationList;
   }
 
   List<Member> _memberListFromSnapshot(QuerySnapshot snapshot) {
@@ -163,14 +219,18 @@ class DatabaseService {
 
 // -end- MEMBER Getters
 
-  StorageUploadTask uploadFile(File file, String collection, String fileName) {
+  StorageUploadTask uploadFile(File file, String folder, String fileName) {
     if (file != null) {
-      String filePath = '$collection/$fileName';
+      String filePath = '$folder/$fileName';
       StorageUploadTask uploadTask =
           storage.ref().child(filePath).putFile(file);
       return uploadTask;
     } else {
-      throw ('Given fie is null');
+      throw ('Given file is null');
     }
+  }
+
+  String getFileURL(String folder, String fileName) {
+    return 'gs://meuhlife.appspot.com/$folder/$fileName';
   }
 }

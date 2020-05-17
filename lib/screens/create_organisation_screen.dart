@@ -11,6 +11,7 @@ import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
 import 'package:meuh_life/services/SharedPreferencesService.dart';
+import 'package:meuh_life/services/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CreateOrganisationScreen extends StatefulWidget {
@@ -27,7 +28,8 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
   final _formKey = GlobalKey<FormState>();
   static final SharedPreferencesService shareP = SharedPreferencesService();
   Organisation _organisation = Organisation();
-  List<Member> _members = []; // TODO create this list later from membersID
+  List<Member> _members =
+      []; // TODO switch code to Member class to getProfiles from OrganisationID
   String _locale = 'fr';
   DateFormat format = DateFormat('EEEE dd MMMM à HH:mm');
   File _imageFile;
@@ -329,7 +331,6 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
       androidUiSettings: AndroidUiSettings(
           toolbarTitle: 'Recadrer',
           toolbarColor: Colors.blue.shade800,
-          activeWidgetColor: Colors.blue.shade800,
           toolbarWidgetColor: Colors.white,
           activeControlsWidgetColor: Colors.amber.shade800,
           initAspectRatio: CropAspectRatioPreset.original,
@@ -366,7 +367,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
   Widget showAddMemberButton() {
     return Center(
       child: OutlineButton.icon(
-        onPressed: () => {showSelectMemberDialog()},
+        onPressed: () => {showAddMemberDialog()},
         icon: Icon(
           Icons.add,
           color: Colors.blue.shade800,
@@ -439,7 +440,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
     }
   }
 
-  Future<void> showSelectMemberDialog() {
+  Future<void> showAddMemberDialog() {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -678,15 +679,4 @@ bool containsValue(List<dynamic> list, String attribute, var value) {
   } else {
     return true;
   }
-}
-
-List<DropdownMenuItem<String>> createDropdownMenuItemList(Map map) {
-  List<DropdownMenuItem<String>> list = [];
-  map.forEach((key, value) {
-    list.add(DropdownMenuItem<String>(
-      value: key,
-      child: Text(value),
-    ));
-  });
-  return list;
 }
