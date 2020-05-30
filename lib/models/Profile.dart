@@ -3,6 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_image/firebase_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:meuh_life/components/RoundedDialog.dart';
+import 'package:meuh_life/models/Member.dart';
+import 'package:meuh_life/screens/image_view_screen.dart';
+import 'package:meuh_life/services/DatabaseService.dart';
 
 class Profile {
   String id = '';
@@ -102,34 +106,252 @@ class Profile {
   }
 
   Widget getCircleAvatar({double radius = 60.0}) {
+    Widget defaultAvatar = CircleAvatar(
+      radius: radius,
+      backgroundColor: Colors.blue.shade800,
+      child: Text(
+        this.getNameInitials(),
+        style: TextStyle(
+          fontSize: radius,
+          color: Colors.white,
+        ),
+      ),
+    );
+    if (this.picUrl == null || this.picUrl == '') return defaultAvatar;
     if (this.picUrl.startsWith('gs://')) {
       return CircleAvatar(
         backgroundImage: FirebaseImage(this.picUrl),
         radius: radius,
       );
+    } else {
+      return CachedNetworkImage(
+          imageUrl: this.picUrl,
+          imageBuilder: (context, imageProvider) => Container(
+                width: radius * 2,
+                height: radius * 2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image:
+                      DecorationImage(image: imageProvider, fit: BoxFit.cover),
+                ),
+              ),
+          placeholder: (context, url) => CircularProgressIndicator(),
+          errorWidget: (context, url, error) => defaultAvatar);
     }
-    return CachedNetworkImage(
-      imageUrl: this.picUrl,
-      imageBuilder: (context, imageProvider) => Container(
-        width: radius * 2,
-        height: radius * 2,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          image: DecorationImage(image: imageProvider, fit: BoxFit.cover),
-        ),
-      ),
-      placeholder: (context, url) => CircularProgressIndicator(),
-      errorWidget: (context, url, error) => CircleAvatar(
-        radius: radius,
-        backgroundColor: Colors.blue.shade800,
-        child: Text(
-          this.getNameInitials(),
-          style: TextStyle(
-            fontSize: radius,
-            color: Colors.white,
+  }
+
+  Widget showPromo() {
+    return Expanded(
+      child: Card(
+        child: Container(
+          padding: EdgeInsets.all(16.0),
+          child: Row(
+            children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Promo',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text('P' + this.promo),
+                ],
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget showType() {
+    return Card(
+      child: Container(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Parcours',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text(this.getType()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget showGapYear() {
+    return Expanded(
+      child: Card(
+        child: Container(
+          padding: EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Césurien',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(this.gapYear ? 'Oui' : 'Non'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget showIsPAM() {
+    return Expanded(
+      child: Card(
+        child: Container(
+          padding: EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'PAM',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(this.isPAM ? 'Oui' : 'Non'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> showDetailedDialog(BuildContext context) async {
+    DatabaseService database = DatabaseService();
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return RoundedDialog(
+          circleAvatar: InkWell(
+              onTap: () {
+                if (this.picUrl != null && this.picUrl != '') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ImageViewScreen(imageURL: this.picUrl),
+                    ),
+                  );
+                }
+              },
+              child: this.getCircleAvatar(radius: 60.0)),
+          circleRadius: 60.0,
+          content: Column(
+            children: <Widget>[
+              Expanded(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    Center(
+                      child: Text(
+                        this.getFullName() + ' (${this.getPromo()})',
+                        style: TextStyle(
+                          fontSize: 24.0,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    if (this.description != '')
+                      Padding(
+                          padding: const EdgeInsets.only(top: 8.0, left: 16.0),
+                          child: Text(
+                            this.description,
+                            style: TextStyle(
+                              fontSize: 16.0,
+                            ),
+                          )),
+                    showType(),
+                    Row(
+                      children: <Widget>[
+                        showGapYear(),
+                        showIsPAM(),
+                      ],
+                    ),
+                    Text(
+                      'Organisations',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    StreamBuilder(
+                        stream: database.getMemberListStream(
+                            on: 'userID', onValueEqualTo: this.id),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return Center(
+                              child: Text(
+                                  'No Member data for organisation  ${this.id}'),
+                            );
+                          } else {
+                            List<Member> members = snapshot.data;
+                            return ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: members.length,
+                                itemBuilder: (context, index) {
+                                  Member member = members[index];
+                                  return member
+                                      .getListItemOrganisation(database);
+                                });
+                          }
+                        }),
+                  ],
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  children: <Widget>[
+                    FlatButton(
+                      onPressed: () {
+                        print('Click talk with ..');
+//                        Navigator.push(
+//                          context,
+//                          MaterialPageRoute(
+//                              builder: (context) => ConversationScreen(
+//                                    chatRoom: chatRoom,
+//                                    userID: widget.userID,
+//                                    toProfile: this,
+//                                  )),
+//                        ); // To close the dialog
+                      },
+                      child: Text(
+                        'Envoyer un message',
+                        style: TextStyle(color: Colors.blue.shade800),
+                      ),
+                    ),
+                    FlatButton(
+                      onPressed: () {
+                        Navigator.of(context).pop(); // To close the dialog
+                      },
+                      child: Text(
+                        'Fermer',
+                        style: TextStyle(color: Colors.blue.shade800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

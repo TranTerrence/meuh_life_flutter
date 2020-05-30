@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meuh_life/components/RoundedDialog.dart';
+import 'package:meuh_life/models/Member.dart';
 import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/screens/create_organisation_screen.dart';
@@ -37,7 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: StreamBuilder(
             stream: database.getProfileStream(widget.userID),
             builder: (context, snapshot) {
-              print('Rebuilding the tree');
               if (!snapshot.hasData) {
                 return new Text("Chargement ... ");
               }
@@ -144,7 +145,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget showAvatar() {
     const double avatarRadius = 60.0;
     const double iconSize = 18.0;
-    print('Show Avatar');
     return GestureDetector(
       onTap: () => _showSelectPictureMenu(),
       child: Stack(
@@ -337,6 +337,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     color: Colors.blue.shade800,
                   ),
                 ),
+                FlatButton.icon(
+                  label: Text('Supprimer la photo',
+                      style: TextStyle(color: Colors.red.shade800)),
+                  icon: Icon(
+                    Icons.delete,
+                    color: Colors.red.shade800,
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _clearImage();
+                  },
+                ),
                 Align(
                   alignment: Alignment.bottomRight,
                   child: FlatButton(
@@ -460,8 +472,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 16.0),
                 child: OutlineButton.icon(
-                  onPressed: () =>
-                  {
+                  onPressed: () => {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -506,15 +517,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
 
+    _imageFile = cropped ?? _imageFile;
+    String folder = 'profiles_images';
+    String fileName = widget.userID;
+    StorageUploadTask uploadTask =
+    database.uploadFile(_imageFile, folder, fileName);
+    await uploadTask.onComplete;
     // TODO: Check if a photo has been selected before updating (save 1 write and 1 upload)
     setState(() {
-      _imageFile = cropped ?? _imageFile;
-      String folder = 'profiles_images';
-      String fileName = widget.userID;
-      database.uploadFile(_imageFile, folder, fileName);
       database.updateProfile(
           widget.userID, {'picUrl': database.getFileURL(folder, fileName)});
       _profile.picUrl = database.getFileURL(folder, fileName);
+    });
+  }
+
+  void _clearImage() {
+    setState(() {
+      database.updateProfile(widget.userID, {'picUrl': ''});
+      _imageFile = null;
     });
   }
 

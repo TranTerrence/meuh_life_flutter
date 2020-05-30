@@ -2,17 +2,23 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:meuh_life/models/ChatRoom.dart';
+import 'package:meuh_life/models/Comment.dart';
+import 'package:meuh_life/models/Member.dart';
+import 'package:meuh_life/models/Message.dart';
 import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Post.dart';
 import 'package:meuh_life/models/Profile.dart';
 
-import 'utils.dart';
+import 'HivePrefs.dart';
 
 class DatabaseService {
   final FirebaseStorage storage =
       FirebaseStorage(storageBucket: 'gs://meuhlife.appspot.com/');
 
   // -start- PROFILE Getters
+
   Future<Profile> getProfile(String userID) async {
     CollectionReference userCollection = Firestore.instance.collection('users');
     DocumentSnapshot document = await userCollection.document(userID).get();
@@ -62,13 +68,22 @@ class DatabaseService {
   // -end- PROFILE Getters
 
   // -start- POST Getters
-  Stream<List<Post>> getPostListStream({String orderBy = 'creationDate'}) {
+  Stream<List<Post>> getPostListStream(
+      {String orderBy = 'creationDate', String on, String onValueEqualTo}) {
     // TODO Later: Add optional query params
     CollectionReference postCollection = Firestore.instance.collection('posts');
-    return postCollection
-        .orderBy(orderBy, descending: true)
-        .snapshots()
-        .map(_postListFromSnapshot);
+    if (on != null && onValueEqualTo != null) {
+      return postCollection
+          .where(on, isEqualTo: onValueEqualTo)
+          .orderBy(orderBy, descending: true)
+          .snapshots()
+          .map(_postListFromSnapshot);
+    } else {
+      return postCollection
+          .orderBy(orderBy, descending: true)
+          .snapshots()
+          .map(_postListFromSnapshot);
+    }
   }
 
   List<Post> _postListFromSnapshot(QuerySnapshot snapshot) {
@@ -77,6 +92,91 @@ class DatabaseService {
       //Will cast the Post into the right children (Event, internship, ...)
       return p.castFromDocSnapshot(doc);
     }).toList();
+  }
+
+  Stream<List<Comment>> getCommentListStream(
+      {String orderBy = 'creationDate',
+      String on,
+      String onValueEqualTo,
+      @required String postID}) {
+    // TODO Later: Add optional query params
+    CollectionReference commentCollection = Firestore.instance
+        .collection('posts')
+        .document(postID)
+        .collection('comments');
+    if (on != null && onValueEqualTo != null) {
+      return commentCollection
+          .where(on, isEqualTo: onValueEqualTo)
+          .orderBy(orderBy, descending: false)
+          .snapshots()
+          .map(_commentListFromSnapshot);
+    } else {
+      return commentCollection
+          .orderBy(orderBy, descending: false)
+          .snapshots()
+          .map(_commentListFromSnapshot);
+    }
+  }
+
+  List<Comment> _commentListFromSnapshot(QuerySnapshot snapshot) {
+    return snapshot.documents.map((doc) {
+      return Comment.fromDocSnapshot(doc);
+    }).toList();
+  }
+
+  void addComment(String postID, Map<String, dynamic> data) async {
+    CollectionReference commentCollection = Firestore.instance
+        .collection('posts')
+        .document(postID)
+        .collection('comments');
+    await commentCollection.add(data);
+  }
+
+  Future<bool> updateReactionToPost(
+      {@required String postID, String reaction}) async {
+    final preferences = await HivePrefs.getInstance();
+    String currentUserID = preferences.getUserID();
+    DocumentReference reactionDocument = Firestore.instance
+        .collection('posts')
+        .document(postID)
+        .collection('reactions')
+        .document(currentUserID);
+    if (reaction == null) {
+      await reactionDocument.delete();
+      return false;
+    } else {
+      await reactionDocument.setData({"reaction": reaction});
+      return true;
+    }
+  }
+
+  Future<Stream<String>> getCurrentUserReactionToPostStream(
+      String postID) async {
+    final preferences = await HivePrefs.getInstance();
+    String currentUserID = preferences.getUserID();
+    DocumentReference reactionDocument = Firestore.instance
+        .collection('posts')
+        .document(postID)
+        .collection('reactions')
+        .document(currentUserID);
+    return reactionDocument.snapshots().map((doc) => doc['reaction']);
+  }
+
+  Future<String> getCurrentUserReactionToPost(String postID) async {
+    final preferences = await HivePrefs.getInstance();
+    String currentUserID = preferences.getUserID();
+    DocumentReference reactionDocument = Firestore.instance
+        .collection('posts')
+        .document(postID)
+        .collection('reactions')
+        .document(currentUserID);
+
+    DocumentSnapshot snapShot = await reactionDocument.get();
+    if (snapShot == null || !snapShot.exists) {
+      return null;
+    } else {
+      return snapShot.data['reaction'];
+    }
   }
 
   // -end- POST Getters
@@ -132,15 +232,18 @@ class DatabaseService {
 
   void createOrganisationAndMembers(
       Organisation organisation, List<Member> members, File imageFile) async {
-    //TODO: create the Organisation document, then create all members document, get the ID and put it into the orga document
+    //create the Organisation document, then create all members document, get the ID and put it into the orga document
+
     CollectionReference organisationCollection =
         Firestore.instance.collection('organisations');
 
-    String currentUserID = await SharedPref.getUserID();
+    final preferences = await HivePrefs.getInstance();
+    String currentUserID = preferences.getUserID();
+
     DocumentReference orgRef = organisationCollection.document();
     String organisationID = orgRef.documentID;
     CollectionReference memberCollection =
-    Firestore.instance.collection('organisations/$organisationID/members');
+    Firestore.instance.collection('members');
     await Future.forEach(members, (member) async {
       member.organisationID = organisationID;
       member.addedBy = currentUserID;
@@ -218,6 +321,38 @@ class DatabaseService {
   }
 
 // -end- MEMBER Getters
+  Stream<List<ChatRoom>> getChatRoomListStream(
+      {String orderBy = 'lastMessageDate', @required String userID}) {
+    CollectionReference chatRoomCollection =
+    Firestore.instance.collection('chatRooms');
+    return chatRoomCollection
+        .orderBy(orderBy, descending: true)
+        .where('users', arrayContains: userID)
+        .snapshots()
+        .map(_chatRoomListFromSnapshot);
+  }
+
+  List<ChatRoom> _chatRoomListFromSnapshot(QuerySnapshot snapshot) {
+    return snapshot.documents.map((doc) {
+      return ChatRoom.fromDocSnapshot(doc);
+    }).toList();
+  }
+
+  Stream<List<Message>> getMessageListStream(
+      {String orderBy = 'creationDate', @required String chatRoomID}) {
+    CollectionReference messageCollection =
+    Firestore.instance.collection('chatRooms/$chatRoomID/messages');
+    return messageCollection
+        .orderBy(orderBy, descending: true)
+        .snapshots()
+        .map(_messageListFromSnapshot);
+  }
+
+  List<Message> _messageListFromSnapshot(QuerySnapshot snapshot) {
+    return snapshot.documents.map((doc) {
+      return Message.fromDocSnapshot(doc);
+    }).toList();
+  }
 
   StorageUploadTask uploadFile(File file, String folder, String fileName) {
     if (file != null) {
@@ -232,5 +367,35 @@ class DatabaseService {
 
   String getFileURL(String folder, String fileName) {
     return 'gs://meuhlife.appspot.com/$folder/$fileName';
+  }
+
+  void createChatRoom(ChatRoom chatRoom) async {
+    CollectionReference messageCollection =
+    Firestore.instance.collection('chatRooms');
+    if (!chatRoom.isChatGroup) {
+      DocumentReference document = messageCollection.document(chatRoom.id);
+      await document.setData(chatRoom.toJson());
+    } else {
+      await messageCollection.add(chatRoom.toJson());
+    }
+    return;
+  }
+
+  void sendMessage(
+      {Message message, String chatRoomID, File imageFile = null}) async {
+    CollectionReference messageCollection = Firestore.instance
+        .collection('chatRooms')
+        .document(chatRoomID)
+        .collection('messages');
+
+    DocumentReference msgRef = messageCollection.document();
+    String msgID = msgRef.documentID;
+    if (imageFile != null) {
+      String collection = 'messages_images/$chatRoomID';
+      String fileName = msgID;
+      message.imageURL = getFileURL(collection, fileName);
+      this.uploadFile(imageFile, collection, fileName);
+    }
+    await msgRef.setData(message.toJson());
   }
 }

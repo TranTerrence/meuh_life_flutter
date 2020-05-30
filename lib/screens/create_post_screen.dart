@@ -11,11 +11,12 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:meuh_life/components/SelectPublisher.dart';
 import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Post.dart';
 import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:meuh_life/services/HivePrefs.dart';
 
 class CreatePostScreen extends StatefulWidget {
   CreatePostScreen(this.userID);
@@ -31,8 +32,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Post _post = Post(type: 'ANNOUNCE', asOrganisation: '');
   String appBarTitle = 'Ajouter une annonce';
   String submitButtonName = "Créer l'annonce";
-
-  List<DropdownMenuItem<String>> _dropDownList = [];
 
   //Event attributes
   DateTime _startDate = DateTime.now();
@@ -149,39 +148,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Widget showSelectPublisher() {
-    return FutureBuilder<List<DropdownMenuItem<String>>>(
-      future: getDropDownAs(),
-      builder:
-          (context, AsyncSnapshot<List<DropdownMenuItem<String>>> snapshot) {
-        if (!snapshot.hasData) {
-          return Center(
-            child: Text('No Member data for ${widget.userID}'),
-          );
-        } else {
-          List<DropdownMenuItem<String>> list = snapshot.data;
-          //Get each organisation for each membership
-          return Container(
-            decoration: new BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(30.0)),
-                border: new Border.all(color: Colors.grey)),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                items: list,
-                value: _post.asOrganisation,
-                icon: Icon(Icons.arrow_drop_down),
-                onChanged: (String newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      _post.asOrganisation = newValue;
-                    });
-                  }
-                },
-              ),
-            ),
-          );
-        }
-      },
-    );
+    void callback(newValue) {
+      setState(() {
+        _post.asOrganisation = newValue;
+      });
+    }
+
+    return SelectPublisher(
+        userID: widget.userID, value: _post.asOrganisation, callback: callback);
   }
 
   Future<List<DropdownMenuItem<String>>> getDropDownAs() async {
@@ -189,7 +163,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     double itemHeight = 54.0;
     List<DropdownMenuItem<String>> list = [];
     List<Organisation> organisations =
-    await database.getOrganisationListOf(widget.userID);
+        await database.getOrganisationListOf(widget.userID);
     organisations.forEach((organisation) {
       list.add(DropdownMenuItem<String>(
         value: organisation.id,
@@ -589,8 +563,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         break;
     }
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    _post.author = prefs.getString('userID');
+    final preferences = await HivePrefs.getInstance();
+    _post.author = preferences.getUserID();
 
     DocumentReference docRef =
     Firestore.instance.collection('posts').document();
@@ -604,7 +578,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       FirebaseStorage storage =
       FirebaseStorage(storageBucket: 'gs://meuhlife.appspot.com/');
       String filePath = 'posts_images/${docRef.documentID}';
-      StorageUploadTask uploadTask =
       storage.ref().child(filePath).putFile(_imageFile);
     }
     docRef.setData(_post.toJson());
@@ -612,8 +585,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   void uploadPostImage() async {
     print('SENDING DATA TO Storage');
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userID = prefs.getString('userID');
+    final preferences = await HivePrefs.getInstance();
+    String userID = preferences.getUserID();
 
     FirebaseStorage storage =
     FirebaseStorage(storageBucket: 'gs://meuhlife.appspot.com/');

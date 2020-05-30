@@ -7,12 +7,12 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:meuh_life/models/Member.dart';
 import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
-import 'package:meuh_life/services/SharedPreferencesService.dart';
+import 'package:meuh_life/services/HivePrefs.dart';
 import 'package:meuh_life/services/utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CreateOrganisationScreen extends StatefulWidget {
   CreateOrganisationScreen(this.userID);
@@ -26,10 +26,8 @@ class CreateOrganisationScreen extends StatefulWidget {
 
 class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
   final _formKey = GlobalKey<FormState>();
-  static final SharedPreferencesService shareP = SharedPreferencesService();
   Organisation _organisation = Organisation();
-  List<Member> _members =
-      []; // TODO switch code to Member class to getProfiles from OrganisationID
+  List<Member> _members = [];
   String _locale = 'fr';
   DateFormat format = DateFormat('EEEE dd MMMM à HH:mm');
   File _imageFile;
@@ -398,7 +396,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      profile.getCircleAvatar(radius: 40.0),
+                      profile.getCircleAvatar(radius: 24.0),
                       SizedBox(
                         width: 8.0,
                       ),
@@ -408,7 +406,9 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
                           children: <Widget>[
                             Text(
                                 profile.getFullName() + ' (P${profile.promo})'),
-                            Text(_members[index].position),
+                            if (_members[index].position != null &&
+                                _members[index].position != '')
+                              Text(_members[index].position),
                           ],
                         ),
                       ),
@@ -493,7 +493,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: <Widget>[
-                              profile.getCircleAvatar(radius: 35.0),
+                              profile.getCircleAvatar(radius: 24.0),
                               SizedBox(
                                 width: 8.0,
                               ),
@@ -568,7 +568,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
             content: SingleChildScrollView(
               child: Column(
                 children: <Widget>[
-                  profile.getCircleAvatar(radius: 50.0),
+                  profile.getCircleAvatar(radius: 24.0),
                   Text(profile.getFullName()),
                   Text('P${profile.promo}'),
                   Align(
@@ -663,8 +663,8 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
     print('SENDING DATA TO FIRESTORE');
     print(_organisation);
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    _organisation.creatorID = prefs.getString('userID');
+    final preferences = await HivePrefs.getInstance();
+    _organisation.creatorID = preferences.getUserID();
 
     DatabaseService database = DatabaseService();
     database.createOrganisationAndMembers(_organisation, _members, _imageFile);
