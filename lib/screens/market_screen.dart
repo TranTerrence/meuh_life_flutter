@@ -35,44 +35,68 @@ class _MarketScreenState extends State<MarketScreen>
 
   @override
   Widget build(BuildContext context) {
+    List<Tab> tab = [
+      Tab(text: 'Evenements'), //icon: Icon(Icons.event),
+      Tab(text: 'Annonces'), //icon: Icon(Icons.announcement),
+      Tab(text: 'Tout'), //icon: Icon(Icons.announcement),
+      Tab(text: 'Memes'), //icon: Icon(Icons.color_lens),
+    ];
+    List<Widget> tabContent = [
+      showPostList(on: 'type', onValueEqualTo: 'EVENT'),
+      showPostList(on: 'type', onValueEqualTo: 'ANNOUNCE'),
+      showPostList(),
+      showPostList(on: 'type', onValueEqualTo: 'MEMES'),
+    ];
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
-      child: Scaffold(
-        floatingActionButton: ScaleTransition(
-          scale: _hideFabAnimation,
-          child: FloatingActionButton(
-            onPressed: () => {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => CreatePostScreen(widget.userID)),
-              ),
-            },
-            child: Icon(
-              Icons.add,
-              color: Colors.white,
+      child: DefaultTabController(
+        length: 4,
+        child: Scaffold(
+          appBar: AppBar(
+            flexibleSpace: TabBar(
+              isScrollable: true,
+              tabs: tab,
             ),
-            backgroundColor: Colors.blue.shade800,
+          ),
+          body: TabBarView(
+            children: tabContent,
+          ),
+          floatingActionButton: ScaleTransition(
+            scale: _hideFabAnimation,
+            child: FloatingActionButton(
+              onPressed: () => {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => CreatePostScreen(widget.userID)),
+                ),
+              },
+              child: Icon(
+                Icons.add,
+                color: Colors.white,
+              ),
+              backgroundColor: Colors.blue.shade800,
+            ),
           ),
         ),
-        body: showPostList(),
       ),
     );
   }
 
-  Widget showPostList() {
+  Widget showPostList({String on, String onValueEqualTo}) {
     return (Container(
       child: StreamBuilder(
-        stream: database.getPostListStream(),
+        stream:
+        database.getPostListStream(on: on, onValueEqualTo: onValueEqualTo),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return Center(
-              child: Text('No Post data'),
+              child: CircularProgressIndicator(),
             );
           } else {
             List<Post> posts = snapshot.data;
             return ListView.builder(
-              padding: EdgeInsets.all(10.0),
+              padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
               itemBuilder: (context, index) {
                 Post post = posts[index];
                 return post.getCard(context, database);

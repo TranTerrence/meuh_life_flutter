@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:meuh_life/screens/connexion_screen.dart';
 import 'package:meuh_life/screens/home_screen.dart';
+import 'package:meuh_life/services/HivePrefs.dart';
 import 'package:meuh_life/services/authentication.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 enum AuthStatus {
   NOT_DETERMINED,
@@ -10,9 +10,9 @@ enum AuthStatus {
   LOGGED_IN,
 }
 // Shared Preference save USER ID
-saveUserIDToSF(userID) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.setString('userID', userID);
+saveUserIDToHive(userID) async {
+  final preferences = await HivePrefs.getInstance();
+  await preferences.setUserID(userID);
 }
 
 class RootScreen extends StatefulWidget {
@@ -44,7 +44,7 @@ class _RootScreenState extends State<RootScreen> {
 
   void loginCallback() {
     widget.auth.getCurrentUser().then((user) {
-      saveUserIDToSF(user.uid.toString());
+      saveUserIDToHive(user.uid.toString());
       setState(() {
         _userId = user.uid.toString();
       });

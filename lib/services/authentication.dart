@@ -17,6 +17,7 @@ abstract class BaseAuth {
   Future<bool> isEmailVerified();
 }
 
+//TODO: Create a place for forget pasword, reset it
 class Auth implements BaseAuth {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 

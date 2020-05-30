@@ -127,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
     List<Widget> _widgetOptions = <Widget>[
       ProfileScreen(widget.userId, widget.auth, signOut),
       MarketScreen(widget.userId),
-      ChatScreen(),
+      ChatScreen(userID: widget.userId),
     ];
     return SafeArea(
       child: new Scaffold(
@@ -145,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: signOut)
             ],
             ),*/
+
         body: _widgetOptions.elementAt(_selectedIndex),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
@@ -154,8 +155,8 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text('Profile'),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.store),
-              title: Text('Marché'),
+              icon: Icon(Icons.account_balance),
+              title: Text('MINES'),
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.chat),

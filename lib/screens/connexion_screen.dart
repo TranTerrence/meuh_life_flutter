@@ -243,10 +243,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
                 Icons.mail,
                 color: Colors.blue.shade800,
               )),
-          validator: (value) =>
-          value
-              .split('.')
-              .length != 2
+          validator: (value) => value.split('.').length != 2
               ? 'doit être de la forme prénom.nom'
               : null,
           onSaved: (value) => _fullName = value.trim(),

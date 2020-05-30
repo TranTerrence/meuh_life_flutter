@@ -3,9 +3,9 @@ import 'package:firebase_image/firebase_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:meuh_life/components/RoundedDialog.dart';
+import 'package:meuh_life/models/Member.dart';
+import 'package:meuh_life/screens/image_view_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
-
-import 'Profile.dart';
 
 class Organisation {
   String id = '';
@@ -80,82 +80,92 @@ class Organisation {
     }
   }
 
-  Future<void> showDetailedDialog(BuildContext context,
-      Organisation organisation) async {
+  Future<void> showDetailedDialog(
+      BuildContext context, Organisation organisation) async {
     DatabaseService database = DatabaseService();
 
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(builder: (context, setStateDialog) {
-          return RoundedDialog(
-            circleAvatar: organisation.getCircleAvatar(radius: 60.0),
-            circleRadius: 60.0,
-            content: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min, // To make the card compact
-              children: <Widget>[
-                Center(
+        return RoundedDialog(
+          circleAvatar: InkWell(
+              onTap: () {
+                if (this.imageURL != null && this.imageURL != '') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ImageViewScreen(imageURL: this.imageURL),
+                    ),
+                  );
+                }
+              },
+              child: organisation.getCircleAvatar(radius: 60.0)),
+          circleRadius: 60.0,
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min, // To make the card compact
+            children: <Widget>[
+              Center(
+                child: Text(
+                  organisation.fullName,
+                  style: TextStyle(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              Text(
+                organisation.description,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16.0,
+                ),
+              ),
+              SizedBox(height: 24.0),
+              Text(
+                'Membres',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              StreamBuilder(
+                  stream: database.getMemberListStream(
+                      on: 'organisationID', onValueEqualTo: organisation.id),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return Center(
+                        child: Text(
+                            'No Member data for organisation  ${organisation
+                                .id}'),
+                      );
+                    } else {
+                      List<Member> members = snapshot.data;
+                      return ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: members.length,
+                          itemBuilder: (context, index) {
+                            Member member = members[index];
+                            return member.getListItemProfile(database);
+                          });
+                    }
+                  }),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: FlatButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // To close the dialog
+                  },
                   child: Text(
-                    organisation.fullName,
-                    style: TextStyle(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    'Fermer',
+                    style: TextStyle(color: Colors.blue.shade800),
                   ),
                 ),
-                SizedBox(height: 16.0),
-                Text(
-                  organisation.description,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16.0,
-                  ),
-                ),
-                SizedBox(height: 24.0),
-                Text(
-                  'Membres',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                StreamBuilder(
-                    stream: database.getMemberListStream(
-                        on: 'organisationID', onValueEqualTo: organisation.id),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return Center(
-                          child: Text(
-                              'No Member data for organisation  ${organisation
-                                  .id}'),
-                        );
-                      } else {
-                        List<Member> members = snapshot.data;
-                        return ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: members.length,
-                            itemBuilder: (context, index) {
-                              Member member = members[index];
-                              return member.getListItem(database, member);
-                            });
-                      }
-                    }),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: FlatButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(); // To close the dialog
-                    },
-                    child: Text(
-                      'Fermer',
-                      style: TextStyle(color: Colors.blue.shade800),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        });
+              ),
+            ],
+          ),
+        );
       },
     );
   }
@@ -172,129 +182,22 @@ class Organisation {
       "isVerified": this.isVerified
     };
   }
-}
 
-class Member {
-  // Keys : value to show, only the keys should be saved, the value serves only the UI
-  static const roles = {
-    'Admin': 'Admin',
-    'Member': 'Membre',
-    'Owner': 'Propriétaire',
-    'Publisher': 'Publisher'
-  };
-
-  String id = '';
-  String userID = ''; // userID of the member
-  String organisationID = 'Oganisation ID';
-  String role = 'Member';
-  String position = ''; // President, tresorier ,...
-  String addedBy = '';
-  DateTime joiningDate = DateTime.now();
-
-  Member.fromUserID(String userID) {
-    this.userID = userID;
+  Widget getListItem() {
+    return Container(
+      padding: EdgeInsets.only(top: 8.0),
+      child: Row(
+        children: <Widget>[
+          this.getCircleAvatar(radius: 24.0),
+          SizedBox(
+            width: 8.0,
+          ),
+          Text(
+            this.fullName,
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
   }
-
-  Member.fromDocSnapshot(DocumentSnapshot document) {
-    this.id = document.documentID;
-    this.userID = document['userID']; // userID of the member
-    this.organisationID = document['organisationID'];
-    this.role = document['role'];
-    this.position = document['position']; // President, tresorier ,...
-    this.addedBy = document['addedBy'];
-    this.joiningDate = document['joiningDate'] != null
-        ? document['joiningDate'].toDate()
-        : null;
-  }
-
-  Member.fromMap(Map<String, dynamic> map, String memberID) {
-    this.id = memberID;
-    this.userID = map['userID']; // userID of the member
-    this.organisationID = map['organisationID'];
-    this.role = map['role'];
-    this.position = map['position']; // President, tresorier ,...
-    this.addedBy = map['addedBy'];
-    //this.joiningDate = map['joiningDate'] != null ? map['joiningDate'].toDate() : null;
-  }
-
-  Widget getListItem(DatabaseService database, Member member) {
-    return StreamBuilder(
-        stream: database.getProfileStream(member.userID),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(
-              child: Text('No Data for this member'),
-            );
-          } else {
-            Profile profile = snapshot.data;
-            return Container(
-              padding: EdgeInsets.only(top: 8.0),
-              child: Row(
-                children: <Widget>[
-                  profile.getCircleAvatar(radius: 40.0),
-                  SizedBox(
-                    width: 8.0,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        profile.getFullName() + ' (${profile.getPromo()})',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      if (member.position != '') Text(member.position)
-                    ],
-                  ),
-                ],
-              ),
-            );
-          }
-        });
-  }
-
-  String getRole() {
-    return roles[this.role];
-  }
-
-  Future<Organisation> getOrganisation() async {
-    DatabaseService database = DatabaseService();
-    Organisation orga = await database.getOrganisation(this.organisationID);
-    return orga;
-  }
-
-  toJson() {
-    return {
-      "id": this.id,
-      "userID": this.userID,
-      "organisationID": this.organisationID,
-      "role": this.role,
-      "position": this.position,
-      "addedBy": this.addedBy,
-      "joiningDate": this.joiningDate
-    };
-  }
-
-  operator [](String key) {
-    switch (key) {
-      case 'id':
-        return this.id;
-      case 'userID':
-        return this.userID;
-      case 'organisationID':
-        return this.organisationID;
-      case 'role':
-        return this.role;
-      case 'position':
-        return this.position;
-      case 'joiningDate':
-        return this.joiningDate;
-    }
-  }
-}
-
-class Consts {
-  Consts._();
-
-  static const double padding = 16.0;
-  static const double avatarRadius = 60.0;
 }

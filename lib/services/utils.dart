@@ -19,3 +19,13 @@ List<DropdownMenuItem<String>> createDropdownMenuItemList(Map map) {
   });
   return list;
 }
+
+String getChatRoomID(String userID1, String userID2) {
+  String chatRoomID;
+  if (userID1.hashCode <= userID2.hashCode) {
+    chatRoomID = '$userID1-$userID2';
+  } else {
+    chatRoomID = '$userID2-$userID1';
+  }
+  return chatRoomID;
+}
