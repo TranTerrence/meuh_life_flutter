@@ -6,10 +6,18 @@ class ChatRoom {
   String lastMessage;
   String imageURL; // null if !isChatGroup in the DB
   String creatorID;
-  bool isChatGroup;
+  String type = "SINGLE_USER";
   List<String> users;
+  List<String> organisations;
   DateTime lastMessageDate;
   DateTime creationDate;
+
+  static const TYPES = {
+    'SINGLE_USER': 'SINGLE_USER', // One user to another one
+    'SINGLE_ORGANISATION':
+        'SINGLE_ORGANISATION', // One user to One organisation
+    'GROUP': 'GROUP', //A Group of multiple people and/or organisations
+  };
 
   ChatRoom(
       {this.id,
@@ -17,8 +25,9 @@ class ChatRoom {
       this.lastMessage,
       this.imageURL,
       this.creatorID,
-      this.isChatGroup,
+        this.type,
       this.users,
+        this.organisations,
       this.lastMessageDate,
       this.creationDate});
 
@@ -28,22 +37,28 @@ class ChatRoom {
       "lastMessage": this.lastMessage,
       "imageURL": this.imageURL,
       "creatorID": this.creatorID,
-      "isChatGroup": this.isChatGroup,
+      "type": this.type,
       "users": this.users,
+      "organisations": this.organisations,
       "lastMessageDate": this.lastMessageDate ?? FieldValue.serverTimestamp(),
       "creationDate": this.creationDate ?? FieldValue.serverTimestamp()
     };
   }
 
   ChatRoom.fromDocSnapshot(DocumentSnapshot document) {
+    //TODO: THERE IS A BUG HERE
     print(document.data.toString());
     id = document.documentID;
     roomName = document['roomName'];
+    type = document['type'];
     lastMessage = document['lastMessage'];
     imageURL = document['imageURL'];
     creatorID = document['creatorID'];
-    isChatGroup = document['isChatGroup'];
-    users = List<String>.from(document['users']); //
+    users = List<String>.from(document['users']);
+    if (type == 'SINGLE_ORGANISATION' || type == 'GROUP') {
+      print('GOT ORGANISATIONS');
+      organisations = List<String>.from(document['organisations']); //
+    }
     lastMessageDate = document['lastMessageDate'] != null
         ? document['lastMessageDate'].toDate()
         : null;
@@ -52,16 +67,41 @@ class ChatRoom {
         : null;
   }
 
+  ChatRoom.fromMap(Map<String, dynamic> map, String chatRoomID) {
+    this.id = chatRoomID;
+    roomName = map['roomName'];
+    type = map['type'];
+    lastMessage = map['lastMessage'];
+    imageURL = map['imageURL'];
+    creatorID = map['creatorID'];
+    users = List<String>.from(map['users']);
+    if (type == 'SINGLE_ORGANISATION' || type == 'GROUP') {
+      print('GOT ORGANISATIONS');
+      organisations = List<String>.from(map['organisations']); //
+    }
+    lastMessageDate =
+    map['lastMessageDate'] != null ? map['lastMessageDate'].toDate() : null;
+    creationDate =
+    map['creationDate'] != null ? map['creationDate'].toDate() : null;
+  }
+
   String getToUserID(String currentUserID) {
-    if (this.isChatGroup) {
+    if (this.type == "GROUP") {
       throw Exception('Try to get ToUserID of a chatGroup');
     } else {
       for (var i = 0; i < users.length; i++) {
         String userID = users[i];
         if (currentUserID != userID) return userID;
       }
-
       return currentUserID;
+    }
+  }
+
+  String getToOrganisationID() {
+    if (this.type == "SINGLE_ORGANISATION") {
+      return organisations[0];
+    } else {
+      throw Exception('Try to get ToUserID of a chatGroup');
     }
   }
 }

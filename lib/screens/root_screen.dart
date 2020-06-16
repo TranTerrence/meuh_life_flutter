@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:meuh_life/providers/CurrentUser.dart';
 import 'package:meuh_life/screens/connexion_screen.dart';
 import 'package:meuh_life/screens/home_screen.dart';
 import 'package:meuh_life/services/HivePrefs.dart';
 import 'package:meuh_life/services/authentication.dart';
+import 'package:provider/provider.dart';
 
 enum AuthStatus {
   NOT_DETERMINED,
@@ -85,10 +87,14 @@ class _RootScreenState extends State<RootScreen> {
         break;
       case AuthStatus.LOGGED_IN:
         if (_userId.length > 0 && _userId != null) {
-          return new HomeScreen(
-            userId: _userId,
-            auth: widget.auth,
-            logoutCallback: logoutCallback,
+          return Provider(
+            create: (context) => CurrentUser(
+                auth: widget.auth, id: _userId, logoutCallback: logoutCallback),
+            child: HomeScreen(
+              userId: _userId,
+              auth: widget.auth,
+              logoutCallback: logoutCallback,
+            ),
           );
         } else
           return buildWaitingScreen();

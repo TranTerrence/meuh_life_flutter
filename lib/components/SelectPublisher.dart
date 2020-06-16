@@ -24,7 +24,7 @@ class _SelectPublisherState extends State<SelectPublisher> {
             (context, AsyncSnapshot<List<DropdownMenuItem<String>>> snapshot) {
           if (!snapshot.hasData) {
             return Center(
-              child: Text('No Member data for ${widget.userID}'),
+              child: CircularProgressIndicator(),
             );
           } else {
             List<DropdownMenuItem<String>> list = snapshot.data;
@@ -86,7 +86,7 @@ class _SelectPublisherState extends State<SelectPublisher> {
             SizedBox(
               width: 8.0,
             ),
-            Text(profile.getFullName()),
+            Text(profile.fullName),
           ],
         )));
     return list;

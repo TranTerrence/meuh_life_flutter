@@ -2,14 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:meuh_life/models/Post.dart';
+import 'package:meuh_life/providers/CurrentUser.dart';
 import 'package:meuh_life/screens/create_post_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
+import 'package:provider/provider.dart';
 
 class MarketScreen extends StatefulWidget {
-  MarketScreen(this.userID);
-
-  final String userID;
-
   @override
   _MarketScreenState createState() => _MarketScreenState();
 }
@@ -18,6 +16,7 @@ class _MarketScreenState extends State<MarketScreen>
     with TickerProviderStateMixin<MarketScreen> {
   AnimationController _hideFabAnimation;
   DatabaseService database = DatabaseService();
+  CurrentUser currentUser;
 
   @override
   initState() {
@@ -25,6 +24,7 @@ class _MarketScreenState extends State<MarketScreen>
     _hideFabAnimation =
         AnimationController(vsync: this, duration: kThemeAnimationDuration);
     _hideFabAnimation.forward();
+    currentUser = Provider.of<CurrentUser>(context, listen: false);
   }
 
   @override
@@ -68,7 +68,8 @@ class _MarketScreenState extends State<MarketScreen>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => CreatePostScreen(widget.userID)),
+                      builder: (context) =>
+                          CreatePostScreen(userID: currentUser.id)),
                 ),
               },
               child: Icon(
@@ -87,7 +88,7 @@ class _MarketScreenState extends State<MarketScreen>
     return (Container(
       child: StreamBuilder(
         stream:
-        database.getPostListStream(on: on, onValueEqualTo: onValueEqualTo),
+            database.getPostListStream(on: on, onValueEqualTo: onValueEqualTo),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return Center(
@@ -99,7 +100,7 @@ class _MarketScreenState extends State<MarketScreen>
               padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
               itemBuilder: (context, index) {
                 Post post = posts[index];
-                return post.getCard(context, database);
+                return post.getCard(context, database, currentUser);
               },
               itemCount: posts.length,
             );

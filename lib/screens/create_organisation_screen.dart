@@ -58,10 +58,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
 
   List<Profile> filterProfiles(String pattern) {
     return _profiles.where((profile) {
-      return profile
-          .getFullName()
-          .toLowerCase()
-          .contains(pattern.toLowerCase());
+      return profile.fullName.toLowerCase().contains(pattern.toLowerCase());
     }).toList();
   }
 
@@ -404,8 +401,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(
-                                profile.getFullName() + ' (P${profile.promo})'),
+                            Text(profile.fullName + ' (P${profile.promo})'),
                             if (_members[index].position != null &&
                                 _members[index].position != '')
                               Text(_members[index].position),
@@ -502,7 +498,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     Text(
-                                      profile.getFullName(),
+                                      profile.fullName,
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold),
                                     ),
@@ -569,7 +565,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
               child: Column(
                 children: <Widget>[
                   profile.getCircleAvatar(radius: 24.0),
-                  Text(profile.getFullName()),
+                  Text(profile.fullName),
                   Text('P${profile.promo}'),
                   Align(
                     alignment: Alignment.centerLeft,

@@ -302,9 +302,9 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
           ),
           Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(left: 16.0),
-                child: Text('Césurien'),
-              )),
+            padding: const EdgeInsets.only(left: 16.0),
+            child: Text('Césurien'),
+          )),
           Checkbox(
               value: _gapYear,
               onChanged: (bool value) =>
@@ -441,21 +441,3 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
     );
   }
 }
-
-getPicUrl(lastName, promo) {
-  String lName = capitalize(lastName);
-  String picUrlNameTemp = lName.replaceAll("-", "");
-  String picUrlName;
-  if (picUrlNameTemp.length > 8) {
-    picUrlName = picUrlNameTemp.substring(0, 8).toLowerCase();
-  } else {
-    picUrlName = picUrlNameTemp.toLowerCase();
-  }
-  return 'https://eleves.mines-paris.eu/static//img/trombi/' +
-      promo +
-      picUrlName +
-      '.jpg';
-}
-
-String capitalize(String s) =>
-    s[0].toUpperCase() + s.substring(1).toLowerCase();

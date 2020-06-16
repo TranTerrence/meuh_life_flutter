@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:like_button/like_button.dart';
 import 'package:meuh_life/models/Organisation.dart';
+import 'package:meuh_life/providers/CurrentUser.dart';
 import 'package:meuh_life/screens/comment_screen.dart';
+import 'package:meuh_life/screens/edit_post_screen.dart';
 import 'package:meuh_life/screens/image_view_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -100,7 +102,7 @@ class Post {
               ? document['startDate'].toDate()
               : null;
           DateTime endDate =
-          document['endDate'] != null ? document['endDate'].toDate() : null;
+              document['endDate'] != null ? document['endDate'].toDate() : null;
           double price = document['price'];
           String location = document['location'];
 
@@ -109,6 +111,20 @@ class Post {
               endDate: endDate,
               price: price,
               location: location);
+        }
+        break;
+
+      case 'INTERNSHIP':
+        {
+          DateTime startDate = document['startDate'] != null
+              ? document['startDate'].toDate()
+              : null;
+          DateTime endDate =
+          document['endDate'] != null ? document['endDate'].toDate() : null;
+          String location = document['location'];
+
+          return this.toInternship(
+              startDate: startDate, endDate: endDate, location: location);
         }
         break;
     }
@@ -289,10 +305,11 @@ class Post {
   }
 
   //TODO : Optimize this function the logic for likes is not good
-  Widget showActionButtons(BuildContext context) {
+  Widget showActionButtons(BuildContext context, CurrentUser currentUser) {
     bool isLiked;
     DatabaseService database = DatabaseService();
-    print('building action bar');
+
+    bool isCurrentUser = this.author == currentUser.id;
     return ButtonBar(
       alignment: MainAxisAlignment.spaceAround,
       children: <Widget>[
@@ -301,7 +318,6 @@ class Post {
             builder: (context, AsyncSnapshot<String> snapshot) {
               String reaction = snapshot.data;
               isLiked = reaction == 'piche';
-              print('value $isLiked');
               return Row(
                 children: <Widget>[
                   LikeButton(
@@ -366,6 +382,25 @@ class Post {
                 ),
               ),
         ),
+        if (isCurrentUser)
+          IconButton(
+            padding: EdgeInsets.all(8.0),
+            icon: Icon(
+              Icons.edit,
+              color: Colors.grey,
+            ),
+            onPressed: () =>
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        EditPostScreen(
+                          post: this,
+                          currentUser: currentUser,
+                        ),
+                  ),
+                ),
+          )
       ],
     );
   }
@@ -376,7 +411,8 @@ class Post {
     return database.updateReactionToPost(postID: this.id, reaction: reaction);
   }
 
-  Widget getCard(BuildContext context, DatabaseService database) {
+  Widget getCard(BuildContext context, DatabaseService database,
+      CurrentUser currentUser) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -391,7 +427,7 @@ class Post {
           showTitle(),
           showDescription(),
           showImage(context),
-          showActionButtons(context),
+          showActionButtons(context, currentUser),
         ],
       ),
     );
@@ -403,6 +439,24 @@ class Post {
         startDate: startDate,
         endDate: endDate,
         price: price,
+        location: location,
+        id: this.id,
+        title: this.title,
+        description: this.description,
+        author: this.author,
+        imageURL: this.imageURL,
+        asOrganisation: this.asOrganisation,
+        type: this.type,
+        creationDate: this.creationDate,
+        reactionCount: this.reactionCount,
+        commentCount: this.commentCount);
+  }
+
+  Internship toInternship(
+      {DateTime startDate, DateTime endDate, String location}) {
+    return Internship(
+        startDate: startDate,
+        endDate: endDate,
         location: location,
         id: this.id,
         title: this.title,
@@ -462,7 +516,8 @@ class Event extends Post {
   }
 
   @override
-  Widget getCard(BuildContext context, DatabaseService database) {
+  Widget getCard(BuildContext context, DatabaseService database,
+      CurrentUser currentUser) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -478,13 +533,13 @@ class Event extends Post {
                     ? showAuthorProfile(database)
                     : showOrganisationProfile(database),
               ),
-              showLocation(),
+              if (this.location != '') showLocation(),
               showEventDate(),
               showPrice(),
               showTitle(),
               showDescription(),
               showImage(context),
-              showActionButtons(context),
+              showActionButtons(context, currentUser),
             ],
           )
         ],
@@ -506,7 +561,7 @@ class Event extends Post {
             width: Post.padding / 2,
           ),
           Text(
-            '${this.price}€',
+            this.price == null ? "Gratuit" : '${this.price}€',
             textAlign: TextAlign.center,
           ),
         ],
@@ -563,4 +618,124 @@ class Event extends Post {
   }
 }
 
+class Internship extends Post {
+  DateTime startDate;
+  DateTime endDate;
+  String location;
+
+  Internship({
+    this.startDate,
+    this.endDate,
+    this.location,
+    String id,
+    String title,
+    String description,
+    String author,
+    String imageURL,
+    String asOrganisation,
+    String type,
+    int reactionCount,
+    int commentCount,
+    DateTime creationDate,
+  }) : super(
+    id: id,
+    title: title,
+    description: description,
+    author: author,
+    imageURL: imageURL,
+    asOrganisation: asOrganisation,
+    type: type,
+    creationDate: creationDate,
+    reactionCount: reactionCount,
+    commentCount: commentCount,
+  );
+
+  Map<String, dynamic> toJson() {
+    return {
+      "startDate": this.startDate,
+      "endDate": this.endDate,
+      "location": this.location,
+      ...super.toJson() //
+    };
+  }
+
+  @override
+  Widget getCard(BuildContext context, DatabaseService database,
+      CurrentUser currentUser) {
+    return Card(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(Post.padding),
+                child: this.asOrganisation == '' || this.asOrganisation == null
+                    ? showAuthorProfile(database)
+                    : showOrganisationProfile(database),
+              ),
+              if (this.location != '' && this.location != null) showLocation(),
+              showInternshipDate(),
+              showTitle(),
+              showDescription(),
+              showImage(context),
+              showActionButtons(context, currentUser),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget showLocation() {
+    return Padding(
+      padding: const EdgeInsets.only(left: Post.padding),
+      child: Row(
+        children: <Widget>[
+          Icon(
+            Icons.place,
+            color: Colors.blue.shade800,
+            size: 16.0,
+          ),
+          SizedBox(
+            width: Post.padding / 2,
+          ),
+          Text(this.location),
+        ],
+      ),
+    );
+  }
+
+  Widget showInternshipDate() {
+    timeago.setLocaleMessages('fr_short', timeago.FrShortMessages());
+    DateFormat format = DateFormat('dd/MM à HH:mm');
+
+    return Padding(
+      padding: const EdgeInsets.only(left: Post.padding),
+      child: Row(
+        children: <Widget>[
+          Icon(
+            Icons.access_time,
+            color: Colors.blue.shade800,
+            size: 16.0,
+          ),
+          SizedBox(
+            width: Post.padding / 2,
+          ),
+          Text(
+            format.format(this.startDate) + ' - ' ?? '',
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            format.format(this.endDate) ?? '',
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
 // START all the widget layout for the getCard

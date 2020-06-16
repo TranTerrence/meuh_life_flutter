@@ -94,6 +94,41 @@ class DatabaseService {
     }).toList();
   }
 
+  Future<void> deletePost(Post post) async {
+    CollectionReference commentCollection = Firestore.instance
+        .collection('posts')
+        .document(post.id)
+        .collection('comments');
+    await deleteCollection(commentCollection);
+
+    CollectionReference reactionCollection = Firestore.instance
+        .collection('posts')
+        .document(post.id)
+        .collection('reactions');
+    await deleteCollection(reactionCollection);
+
+    CollectionReference postCollection = Firestore.instance.collection('posts');
+    postCollection.document(post.id).delete();
+    if (post.imageURL != null) {
+      StorageReference imageRef =
+          storage.ref().child("posts_images/${post.id}");
+      imageRef.delete().then((value) => null).catchError((e) {
+        print(e);
+      });
+    }
+  }
+
+  Future<void> deleteCollection(CollectionReference collection) async {
+    collection.getDocuments().then((snapshot) async {
+      if (snapshot != null) {
+        for (DocumentSnapshot ds in snapshot.documents) {
+          await ds.reference.delete();
+        }
+        return;
+      }
+    });
+  }
+
   Stream<List<Comment>> getCommentListStream(
       {String orderBy = 'creationDate',
       String on,
@@ -215,6 +250,14 @@ class DatabaseService {
         .map(_organisationListFromSnapshot);
   }
 
+  Future<List<Organisation>> getOrganisationList() async {
+    CollectionReference userCollection =
+    Firestore.instance.collection('organisations');
+    QuerySnapshot querySnapshot = await userCollection.getDocuments();
+    List<Organisation> list = _organisationListFromSnapshot(querySnapshot);
+    return list;
+  }
+
   List<Organisation> _organisationListFromSnapshot(QuerySnapshot snapshot) {
     return snapshot.documents.map((doc) {
       return Organisation.fromDocSnapshot(doc);
@@ -321,6 +364,7 @@ class DatabaseService {
   }
 
 // -end- MEMBER Getters
+  //userID of the current USER
   Stream<List<ChatRoom>> getChatRoomListStream(
       {String orderBy = 'lastMessageDate', @required String userID}) {
     CollectionReference chatRoomCollection =
@@ -332,7 +376,37 @@ class DatabaseService {
         .map(_chatRoomListFromSnapshot);
   }
 
+  Stream<List<ChatRoom>> getOrganisationChatRoomListStream(
+      {String orderBy = 'lastMessageDate', @required String organisationID}) {
+    CollectionReference chatRoomCollection =
+    Firestore.instance.collection('chatRooms');
+    return chatRoomCollection
+        .orderBy(orderBy, descending: true)
+        .where('organisations', arrayContains: organisationID)
+        .snapshots()
+        .map(_chatRoomListFromSnapshot);
+  }
+
+  Future<List<ChatRoom>> getOrganisationChatRoomList(
+      {String orderBy = 'lastMessageDate',
+        @required String organisationID}) async {
+    CollectionReference chatRoomCollection =
+    Firestore.instance.collection('chatRooms');
+    List<ChatRoom> chatRoomList = [];
+
+    QuerySnapshot querySnapshot = await chatRoomCollection
+        .orderBy(orderBy, descending: true)
+        .where('organisations', arrayContains: organisationID)
+        .getDocuments();
+
+    querySnapshot.documents.forEach((result) {
+      chatRoomList.add(ChatRoom.fromMap(result.data, result.documentID));
+    });
+    return chatRoomList;
+  }
+
   List<ChatRoom> _chatRoomListFromSnapshot(QuerySnapshot snapshot) {
+    print('Mapping ChatRoom List');
     return snapshot.documents.map((doc) {
       return ChatRoom.fromDocSnapshot(doc);
     }).toList();
@@ -372,7 +446,7 @@ class DatabaseService {
   void createChatRoom(ChatRoom chatRoom) async {
     CollectionReference messageCollection =
     Firestore.instance.collection('chatRooms');
-    if (!chatRoom.isChatGroup) {
+    if (chatRoom.id != null && chatRoom.id != '') {
       DocumentReference document = messageCollection.document(chatRoom.id);
       await document.setData(chatRoom.toJson());
     } else {

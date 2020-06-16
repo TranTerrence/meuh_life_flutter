@@ -47,7 +47,7 @@ class Profile {
     this.promo = promo;
     this.firstName = capitalize(firstName);
     this.lastName = capitalize(lastName);
-    this.picUrl = createPicUrl(lastName, promo);
+    this.picUrl = createPicUrl(lastName, promo, type);
     this.type = type;
     this.creationDate = creationDate;
     this.gapYear = gapYear;
@@ -89,7 +89,7 @@ class Profile {
     };
   }
 
-  String getFullName() {
+  String get fullName {
     return this.firstName + ' ' + this.lastName;
   }
 
@@ -97,7 +97,7 @@ class Profile {
     return types[this.type];
   }
 
-  String getPromo() {
+  String get promoWithP {
     return 'P${this.promo}';
   }
 
@@ -260,7 +260,7 @@ class Profile {
                   children: <Widget>[
                     Center(
                       child: Text(
-                        this.getFullName() + ' (${this.getPromo()})',
+                        this.fullName + ' (${this.promoWithP})',
                         style: TextStyle(
                           fontSize: 24.0,
                           fontWeight: FontWeight.w700,
@@ -356,16 +356,18 @@ class Profile {
   }
 }
 
-String createPicUrl(String lastName, String promo) {
+String createPicUrl(String lastName, String promo, String type) {
   String lName = capitalize(lastName);
   String picUrlNameTemp = lName.replaceAll("-", "");
   String picUrlName;
+  String i = '';
   if (picUrlNameTemp.length > 8) {
     picUrlName = picUrlNameTemp.substring(0, 8).toLowerCase();
   } else {
     picUrlName = picUrlNameTemp.toLowerCase();
   }
-  return 'https://eleves.mines-paris.eu/static//img/trombi/$promo$picUrlName.jpg';
+  if (type == 'ISUPFERE') i = 'i';
+  return 'https://eleves.mines-paris.eu/static//img/trombi/$i$promo$picUrlName.jpg';
 }
 
 String capitalize(String s) =>
