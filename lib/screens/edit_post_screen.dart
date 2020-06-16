@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_image/firebase_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -15,22 +16,27 @@ import 'package:meuh_life/components/SelectPublisher.dart';
 import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Post.dart';
 import 'package:meuh_life/models/Profile.dart';
+import 'package:meuh_life/providers/CurrentUser.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
 import 'package:meuh_life/services/HivePrefs.dart';
 
-class CreatePostScreen extends StatefulWidget {
-  final String userID;
+class EditPostScreen extends StatefulWidget {
+  final dynamic post; //need to be cast to the right type
+  final CurrentUser currentUser;
 
-  const CreatePostScreen({Key key, this.userID}) : super(key: key);
+  const EditPostScreen(
+      {Key key, @required this.post, @required this.currentUser})
+      : super(key: key);
+
   @override
-  _CreatePostScreenState createState() => _CreatePostScreenState();
+  _EditPostScreenState createState() => _EditPostScreenState();
 }
 
-class _CreatePostScreenState extends State<CreatePostScreen> {
+class _EditPostScreenState extends State<EditPostScreen> {
   final _formKey = GlobalKey<FormState>();
-  Post _post = Post(type: 'ANNOUNCE', asOrganisation: '');
-  String appBarTitle = 'Ajouter une annonce';
-  String submitButtonName = "Créer l'annonce";
+  String appBarTitle = 'Modifier une annonce';
+  String submitButtonName = "Valider les changements";
+  Post _post;
 
   //Event attributes
   DateTime _startDate = DateTime.now();
@@ -97,6 +103,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   void initState() {
     super.initState();
+    setState(() {
+      _post = widget.post;
+      //TODO: Manage edit post Event
+      if (_post.type == 'EVENT') {
+        _startDate = widget.post.startDate;
+        _endDate = widget.post.endDate;
+        _price = widget.post.price;
+        _location = widget.post.location;
+      }
+
+      print(_post.imageURL);
+    });
 
     initializeDateFormatting(_locale, null).then((_) {
       setState(() {
@@ -130,13 +148,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   child: Column(
                     children: <Widget>[
                       showImagePickerButtons(),
-                      if (_imageFile != null) showSelectedImage(),
+                      showSelectedImage(),
                     ],
                   ),
                 ),
                 showTypeField(),
-                if (_post.type == 'EVENT') showEventFields(),
-                if (_post.type == 'INTERNSHIP') showStageFields(),
+                if (widget.post.type == 'EVENT') showEventFields(),
+                if (widget.post.type == 'INTERNSHIP') showStageFields(),
                 showSubmitButton(),
               ],
             ),
@@ -149,12 +167,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Widget showSelectPublisher() {
     void callback(newValue) {
       setState(() {
-        _post.asOrganisation = newValue;
+        widget.post.asOrganisation = newValue;
       });
     }
 
     return SelectPublisher(
-        userID: widget.userID, value: _post.asOrganisation, callback: callback);
+        userID: widget.currentUser.id,
+        value: widget.post.asOrganisation,
+        callback: callback);
   }
 
   Future<List<DropdownMenuItem<String>>> getDropDownAs() async {
@@ -162,7 +182,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     double itemHeight = 54.0;
     List<DropdownMenuItem<String>> list = [];
     List<Organisation> organisations =
-        await database.getOrganisationListOf(widget.userID);
+        await database.getOrganisationListOf(widget.currentUser.id);
     organisations.forEach((organisation) {
       list.add(DropdownMenuItem<String>(
         value: organisation.id,
@@ -180,7 +200,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         ),
       ));
     });
-    Profile profile = await database.getProfile(widget.userID);
+    Profile profile = await database.getProfile(widget.currentUser.id);
     list.add(DropdownMenuItem<String>(
         value: '',
         child: Row(
@@ -200,6 +220,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Widget showTitleField() {
     return TextFormField(
+      initialValue: _post.title,
       onSaved: (String value) {
         _post.title = value;
       },
@@ -248,21 +269,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 switch (_post.type) {
                   case 'EVENT':
                     {
-                      appBarTitle = 'Ajouter un événement';
-                      submitButtonName = "Créer l'événement";
+                      appBarTitle = "Modifier l'événement";
                     }
                     break;
                   case 'ANNOUNCE':
                     {
-                      appBarTitle = 'Ajouter une annonce';
-                      submitButtonName = "Créer l'annonce";
+                      appBarTitle = "Modifier l'annonce";
                     }
                     break;
 
                   case 'INTERNSHIP':
                     {
-                      appBarTitle = 'Ajouter un stage';
-                      submitButtonName = "Créer le stage";
+                      appBarTitle = 'Modifier le stage';
                     }
                     break;
                 }
@@ -278,6 +296,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 32.0),
       child: TextFormField(
+        initialValue: _post.description,
         minLines: 2,
         maxLines: 5,
         cursorColor: Colors.blue.shade800,
@@ -346,8 +365,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 32.0),
       child: TextFormField(
-        controller: TextEditingController()
-          ..text = format.format(_endDate),
+        controller: TextEditingController()..text = format.format(_endDate),
         readOnly: true,
         validator: (value) {
           if (_endDate.isBefore(_startDate)) {
@@ -396,6 +414,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Widget showLocationField() {
     return TextFormField(
+      initialValue: _location,
       onSaved: (String value) {
         _location = value;
       },
@@ -408,6 +427,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Widget showPriceField() {
     return TextFormField(
+      initialValue: _price == null ? null : _price.toString(),
       onSaved: (String value) {
         if (value != '') _price = double.parse(value);
       },
@@ -421,9 +441,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         prefixIcon: Icon(Icons.euro_symbol),
       ),
       validator: (value) {
-        if ('.'
-            .allMatches(value)
-            .length > 1) {
+        if ('.'.allMatches(value).length > 1) {
           return "Le prix entrée n'est pas valide";
         }
         return null;
@@ -478,63 +496,101 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Widget showSelectedImage() {
-    return Column(children: <Widget>[
-      Image.file(_imageFile),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: <Widget>[
-          FlatButton(
-            shape: new RoundedRectangleBorder(
-                borderRadius: new BorderRadius.circular(30.0)),
-            color: Colors.blue.shade800,
-            child: Icon(Icons.crop, color: Colors.white),
-            onPressed: _cropImage,
-          ),
-          FlatButton(
-            shape: new RoundedRectangleBorder(
-                borderRadius: new BorderRadius.circular(30.0)),
-            color: Colors.red.shade800,
-            child: Icon(
-              Icons.delete_forever,
-              color: Colors.white,
+    if (_imageFile != null) {
+      return Column(children: <Widget>[
+        Image.file(_imageFile),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            FlatButton(
+              shape: new RoundedRectangleBorder(
+                  borderRadius: new BorderRadius.circular(30.0)),
+              color: Colors.blue.shade800,
+              child: Icon(Icons.crop, color: Colors.white),
+              onPressed: _cropImage,
             ),
-            onPressed: _clear,
-          ),
-        ],
-      ),
-    ]);
+            FlatButton(
+              shape: new RoundedRectangleBorder(
+                  borderRadius: new BorderRadius.circular(30.0)),
+              color: Colors.red.shade800,
+              child: Icon(
+                Icons.delete_forever,
+                color: Colors.white,
+              ),
+              onPressed: _clear,
+            ),
+          ],
+        ),
+      ]);
+    } else if (_post.imageURL != null) {
+      print('show Firebase image');
+      print(_post.imageURL);
+      return Image(
+        image: FirebaseImage(_post.imageURL),
+      );
+    } else {
+      return Container();
+    }
   }
 
   Widget showSubmitButton() {
-    return new Center(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
-        child: SizedBox(
-          height: 40.0,
-          child: RaisedButton(
-            elevation: 4.0,
-            shape: new RoundedRectangleBorder(
-                borderRadius: new BorderRadius.circular(30.0)),
-            color: Colors.blue.shade800,
-            textColor: Colors.white,
-            onPressed: () {
-              // Validate returns true if the form is valid, or false
-              // otherwise.
-
-              if (_formKey.currentState.validate()) {
-                _formKey.currentState.save();
-                uploadDataToFirebase();
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
+      child: Wrap(
+        children: <Widget>[
+          SizedBox(
+            height: 40.0,
+            child: RaisedButton(
+              elevation: 4.0,
+              shape: new RoundedRectangleBorder(
+                  borderRadius: new BorderRadius.circular(30.0)),
+              color: Colors.red.shade800,
+              textColor: Colors.white,
+              onPressed: () {
+                deletePost(_post);
                 Navigator.pop(context);
-              }
-            },
-            child: Text(
-              submitButtonName,
-              style: TextStyle(fontSize: 16.0),
+              },
+              child: Text(
+                'Supprimer',
+                style: TextStyle(fontSize: 16.0),
+              ),
             ),
           ),
-        ),
+          SizedBox(
+            width: 8.0,
+          ),
+          SizedBox(
+            height: 40.0,
+            child: RaisedButton(
+              elevation: 4.0,
+              shape: new RoundedRectangleBorder(
+                  borderRadius: new BorderRadius.circular(30.0)),
+              color: Colors.blue.shade800,
+              textColor: Colors.white,
+              onPressed: () {
+                // Validate returns true if the form is valid, or false
+                // otherwise.
+
+                if (_formKey.currentState.validate()) {
+                  _formKey.currentState.save();
+                  uploadDataToFirebase();
+                  Navigator.pop(context);
+                }
+              },
+              child: Text(
+                submitButtonName,
+                style: TextStyle(fontSize: 16.0),
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  void deletePost(Post post) async {
+    DatabaseService database = DatabaseService();
+    database.deletePost(post);
   }
 
   void uploadDataToFirebase() async {
@@ -557,28 +613,22 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         break;
 
       case 'INTERNSHIP':
-        {
-          _post = _post.toInternship(
-              startDate: _startDate, endDate: _endDate, location: _location);
-        }
+        {}
         break;
     }
 
-    final preferences = await HivePrefs.getInstance();
-    _post.author = preferences.getUserID();
+    _post.author = widget.currentUser.id;
 
     DocumentReference docRef =
-    Firestore.instance.collection('posts').document();
+        Firestore.instance.collection('posts').document(_post.id);
 
     print(_post.toJson());
-    docRef.setData(_post.toJson());
 
     if (_imageFile != null) {
-      _post.imageURL =
-      'gs://meuhlife.appspot.com/posts_images/${docRef.documentID}';
+      _post.imageURL = 'gs://meuhlife.appspot.com/posts_images/${_post.id}';
       FirebaseStorage storage =
-      FirebaseStorage(storageBucket: 'gs://meuhlife.appspot.com/');
-      String filePath = 'posts_images/${docRef.documentID}';
+          FirebaseStorage(storageBucket: 'gs://meuhlife.appspot.com/');
+      String filePath = 'posts_images/${_post.id}';
       storage.ref().child(filePath).putFile(_imageFile);
     }
     docRef.setData(_post.toJson());
@@ -590,7 +640,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     String userID = preferences.getUserID();
 
     FirebaseStorage storage =
-    FirebaseStorage(storageBucket: 'gs://meuhlife.appspot.com/');
+        FirebaseStorage(storageBucket: 'gs://meuhlife.appspot.com/');
     String filePath = 'posts_images/$userID';
     storage.ref().child(filePath).putFile(_imageFile);
   }

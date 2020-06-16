@@ -137,8 +137,7 @@ class Organisation {
                     if (!snapshot.hasData) {
                       return Center(
                         child: Text(
-                            'No Member data for organisation  ${organisation
-                                .id}'),
+                            'No Member data for organisation  ${organisation.id}'),
                       );
                     } else {
                       List<Member> members = snapshot.data;

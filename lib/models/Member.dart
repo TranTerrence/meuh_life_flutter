@@ -70,7 +70,7 @@ class Member {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        profile.getFullName() + ' (${profile.getPromo()})',
+                        profile.fullName + ' (${profile.promoWithP})',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       if (this.position != '') Text(this.position)

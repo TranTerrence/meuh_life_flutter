@@ -4,22 +4,23 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:meuh_life/models/ChatRoom.dart';
-import 'package:meuh_life/models/Profile.dart';
+import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/screens/conversation_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
 import 'package:meuh_life/services/utils.dart';
 
-class ContactsScreen extends StatefulWidget {
+class OrganisationsScreen extends StatefulWidget {
   final String userID;
 
-  const ContactsScreen({Key key, this.userID}) : super(key: key);
+  const OrganisationsScreen({Key key, this.userID}) : super(key: key);
+
   @override
-  _ContactsScreenState createState() => _ContactsScreenState();
+  _OrganisationsScreenState createState() => _OrganisationsScreenState();
 }
 
-class _ContactsScreenState extends State<ContactsScreen> {
+class _OrganisationsScreenState extends State<OrganisationsScreen> {
   String _subTitle = '';
-  List<Profile> _profiles;
+  List<Organisation> _organisations;
   DatabaseService _database = DatabaseService();
 
   @override
@@ -30,7 +31,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text('Contacts'),
+            Text('Organisations'),
             if (_subTitle != '')
               Text(
                 _subTitle,
@@ -39,56 +40,58 @@ class _ContactsScreenState extends State<ContactsScreen> {
           ],
         ),
       ),
-      body: showContactList(),
+      body: showOrganisationList(),
     );
   }
 
-  Future<List<Profile>> getProfiles() async {
-    List<Profile> profiles = await _database.getProfileList();
+  Future<List<Organisation>> getOrganisations() async {
+    List<Organisation> organisations = await _database.getOrganisationList();
     setState(() {
-      _profiles = profiles;
-      _subTitle = '${_profiles.length} contacts';
+      _organisations = organisations;
+      _subTitle = '${_organisations.length} organisations';
     });
-    return profiles;
+    return organisations;
   }
 
-  Widget showContactList() {
+  Widget showOrganisationList() {
     return FutureBuilder(
-      future: getProfiles(),
-      builder: (context, AsyncSnapshot<List<Profile>> snapshot) {
+      future: getOrganisations(),
+      builder: (context, AsyncSnapshot<List<Organisation>> snapshot) {
         if (!snapshot.hasData) {
           return Center(child: CircularProgressIndicator());
         }
-        _profiles = snapshot.data;
+        _organisations = snapshot.data;
         return ListView.builder(
-            itemCount: _profiles.length,
+            itemCount: _organisations.length,
             itemBuilder: (BuildContext context, int index) {
-              Profile profile = _profiles[index];
+              Organisation organisation = _organisations[index];
 
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: InkWell(
                   onTap: () {
                     String chatRoomID =
-                        getChatRoomID(profile.id, widget.userID);
+                        getChatRoomID(organisation.id, widget.userID);
                     ChatRoom chatRoom = ChatRoom(
                         id: chatRoomID,
-                        type: "SINGLE_USER",
-                        users: [profile.id, widget.userID]);
+                        type: "SINGLE_ORGANISATION",
+                        users: [widget.userID],
+                        organisations: [organisation.id]);
+
                     Navigator.of(context).pop();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => ConversationScreen(
                                 chatRoom: chatRoom,
-                                toProfile: profile,
+                                toOrganisation: organisation,
                                 userID: widget.userID,
                               )),
                     );
                   },
                   child: Row(
                     children: <Widget>[
-                      profile.getCircleAvatar(radius: 24.0),
+                      organisation.getCircleAvatar(radius: 24.0),
                       SizedBox(
                         width: 8.0,
                       ),
@@ -98,13 +101,13 @@ class _ContactsScreenState extends State<ContactsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              profile.fullName + ' (${profile.promoWithP})',
+                              organisation.fullName,
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            profile.description != null &&
-                                    profile.description.length > 0
+                            organisation.description != null &&
+                                    organisation.description.length > 0
                                 ? Text(
-                                    profile.description,
+                                    organisation.description,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   )

@@ -11,17 +11,12 @@ import 'package:meuh_life/components/RoundedDialog.dart';
 import 'package:meuh_life/models/Member.dart';
 import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Profile.dart';
+import 'package:meuh_life/providers/CurrentUser.dart';
 import 'package:meuh_life/screens/create_organisation_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
-import 'package:meuh_life/services/authentication.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatefulWidget {
-  ProfileScreen(this.userID, this.auth, this.signOut);
-
-  final BaseAuth auth;
-  final String userID;
-  final VoidCallback signOut;
-
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
@@ -30,6 +25,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Profile _profile;
   DatabaseService database = DatabaseService();
   File _imageFile;
+  CurrentUser currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    currentUser = Provider.of<CurrentUser>(context, listen: false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,17 +39,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: StreamBuilder(
-            stream: database.getProfileStream(widget.userID),
+            stream: database.getProfileStream(currentUser.id),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return new Text("Chargement ... ");
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
               }
               _profile = snapshot.data;
               return Column(
                 children: [
                   showAvatar(),
                   Text(
-                    _profile.getFullName(),
+                    _profile.fullName,
                     style: TextStyle(fontSize: 30, fontFamily: 'Marker'),
                   ),
                   Card(
@@ -131,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             borderRadius: new BorderRadius.circular(30.0)),
                         color: Colors.blue.shade800,
                         child: new Text('Se déconnecter'),
-                        onPressed: () => widget.signOut(),
+                        onPressed: () => currentUser.signOut(),
                       ),
                     ],
                   ),
@@ -252,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     activeColor: Colors.blue.shade800,
                     value: _profile.gapYear,
                     onChanged: (bool value) => database
-                        .updateProfile(widget.userID, {"gapYear": value})),
+                        .updateProfile(currentUser.id, {"gapYear": value})),
               ),
             ],
           ),
@@ -285,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     activeColor: Colors.blue.shade800,
                     value: _profile.isPAM,
                     onChanged: (bool value) => database
-                        .updateProfile(widget.userID, {"isPAM": value})),
+                        .updateProfile(currentUser.id, {"isPAM": value})),
               ),
             ],
           ),
@@ -420,7 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           //Avoid writing to the DB if it's not necessary
                           if (textInputController.text !=
                               _profile.description) {
-                            database.updateProfile(widget.userID,
+                            database.updateProfile(currentUser.id,
                                 {"description": textInputController.text});
                           }
                           Navigator.of(context).pop();
@@ -450,11 +454,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Container(
               child: StreamBuilder(
                   stream: database.getMemberListStream(
-                      on: 'userID', onValueEqualTo: widget.userID),
+                      on: 'userID', onValueEqualTo: currentUser.id),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return Center(
-                        child: Text('No Member data for ${widget.userID}'),
+                        child: Text('No Member data for ${currentUser.id}'),
                       );
                     } else {
                       List<Member> members = snapshot.data;
@@ -477,7 +481,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              CreateOrganisationScreen(widget.userID)),
+                              CreateOrganisationScreen(currentUser.id)),
                     ),
                   },
                   icon: Icon(
@@ -519,21 +523,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     _imageFile = cropped ?? _imageFile;
     String folder = 'profiles_images';
-    String fileName = widget.userID;
+    String fileName = currentUser.id;
     StorageUploadTask uploadTask =
-    database.uploadFile(_imageFile, folder, fileName);
+        database.uploadFile(_imageFile, folder, fileName);
     await uploadTask.onComplete;
     // TODO: Check if a photo has been selected before updating (save 1 write and 1 upload)
     setState(() {
       database.updateProfile(
-          widget.userID, {'picUrl': database.getFileURL(folder, fileName)});
+          currentUser.id, {'picUrl': database.getFileURL(folder, fileName)});
       _profile.picUrl = database.getFileURL(folder, fileName);
     });
   }
 
   void _clearImage() {
     setState(() {
-      database.updateProfile(widget.userID, {'picUrl': ''});
+      database.updateProfile(currentUser.id, {'picUrl': ''});
       _imageFile = null;
     });
   }

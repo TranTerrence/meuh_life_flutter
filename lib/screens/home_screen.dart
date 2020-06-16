@@ -57,7 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onWillPop: () {},
           child: AlertDialog(
             title: new Text("Vérifie ton email"),
-            content: new Text("Clique sur le lien envoyé sur ton adresseemail"),
+            content:
+                new Text("Clique sur le lien envoyé sur ton adresse email"),
             actions: <Widget>[
               new FlatButton(
                 child: new Text("Renvoyer le lien"),
@@ -125,9 +126,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     List<Widget> _widgetOptions = <Widget>[
-      ProfileScreen(widget.userId, widget.auth, signOut),
-      MarketScreen(widget.userId),
-      ChatScreen(userID: widget.userId),
+      ProfileScreen(),
+      MarketScreen(),
+      ChatScreen(),
     ];
     return SafeArea(
       child: new Scaffold(
