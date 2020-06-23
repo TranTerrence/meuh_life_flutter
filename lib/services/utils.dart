@@ -20,12 +20,13 @@ List<DropdownMenuItem<String>> createDropdownMenuItemList(Map map) {
   return list;
 }
 
-String getChatRoomID(String ID1, String ID2) {
-  String chatRoomID;
+// Returns a key based on 2 input strings
+String getMixKey(String ID1, String ID2) {
+  String mixKey;
   if (ID1.hashCode <= ID2.hashCode) {
-    chatRoomID = '$ID1-$ID2';
+    mixKey = '$ID1-$ID2';
   } else {
-    chatRoomID = '$ID2-$ID1';
+    mixKey = '$ID2-$ID1';
   }
-  return chatRoomID;
+  return mixKey;
 }

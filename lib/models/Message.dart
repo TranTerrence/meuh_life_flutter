@@ -21,8 +21,8 @@ class Message {
       {this.id,
       this.content,
       this.author,
-        this.organisationID,
-        this.asOrganisation,
+      this.organisationID,
+      this.asOrganisation,
       this.imageURL,
       this.type,
       this.creationDate});

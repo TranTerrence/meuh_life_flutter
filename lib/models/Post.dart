@@ -120,7 +120,7 @@ class Post {
               ? document['startDate'].toDate()
               : null;
           DateTime endDate =
-          document['endDate'] != null ? document['endDate'].toDate() : null;
+              document['endDate'] != null ? document['endDate'].toDate() : null;
           String location = document['location'];
 
           return this.toInternship(

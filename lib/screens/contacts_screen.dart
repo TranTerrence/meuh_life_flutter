@@ -69,8 +69,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: InkWell(
                   onTap: () {
-                    String chatRoomID =
-                        getChatRoomID(profile.id, widget.userID);
+                    String chatRoomID = getMixKey(profile.id, widget.userID);
                     ChatRoom chatRoom = ChatRoom(
                         id: chatRoomID,
                         type: "SINGLE_USER",

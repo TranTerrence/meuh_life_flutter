@@ -71,7 +71,7 @@ class _OrganisationsScreenState extends State<OrganisationsScreen> {
                 child: InkWell(
                   onTap: () {
                     String chatRoomID =
-                        getChatRoomID(organisation.id, widget.userID);
+                        getMixKey(organisation.id, widget.userID);
                     ChatRoom chatRoom = ChatRoom(
                         id: chatRoomID,
                         type: "SINGLE_ORGANISATION",
