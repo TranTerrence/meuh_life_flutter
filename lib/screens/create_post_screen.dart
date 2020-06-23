@@ -346,8 +346,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 32.0),
       child: TextFormField(
-        controller: TextEditingController()
-          ..text = format.format(_endDate),
+        controller: TextEditingController()..text = format.format(_endDate),
         readOnly: true,
         validator: (value) {
           if (_endDate.isBefore(_startDate)) {

@@ -141,6 +141,9 @@ class Organisation {
                       );
                     } else {
                       List<Member> members = snapshot.data;
+                      members = members
+                          .where((member) => member.state != 'Requested')
+                          .toList();
                       return ListView.builder(
                           shrinkWrap: true,
                           itemCount: members.length,

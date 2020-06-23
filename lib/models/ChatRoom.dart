@@ -25,7 +25,7 @@ class ChatRoom {
       this.lastMessage,
       this.imageURL,
       this.creatorID,
-        this.type,
+      this.type,
       this.users,
         this.organisations,
       this.lastMessageDate,
@@ -56,7 +56,6 @@ class ChatRoom {
     creatorID = document['creatorID'];
     users = List<String>.from(document['users']);
     if (type == 'SINGLE_ORGANISATION' || type == 'GROUP') {
-      print('GOT ORGANISATIONS');
       organisations = List<String>.from(document['organisations']); //
     }
     lastMessageDate = document['lastMessageDate'] != null
@@ -76,7 +75,6 @@ class ChatRoom {
     creatorID = map['creatorID'];
     users = List<String>.from(map['users']);
     if (type == 'SINGLE_ORGANISATION' || type == 'GROUP') {
-      print('GOT ORGANISATIONS');
       organisations = List<String>.from(map['organisations']); //
     }
     lastMessageDate =

@@ -10,6 +10,7 @@ import 'package:meuh_life/models/Message.dart';
 import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Post.dart';
 import 'package:meuh_life/models/Profile.dart';
+import 'package:meuh_life/services/utils.dart';
 
 import 'HivePrefs.dart';
 
@@ -39,7 +40,6 @@ class DatabaseService {
 
   Stream<List<Profile>> getProfileListStream(
       {String orderBy = 'creationDate'}) {
-    // TODO Later: Add optional query params
     CollectionReference userCollection = Firestore.instance.collection('users');
     return userCollection
         .orderBy(orderBy, descending: true)
@@ -70,7 +70,6 @@ class DatabaseService {
   // -start- POST Getters
   Stream<List<Post>> getPostListStream(
       {String orderBy = 'creationDate', String on, String onValueEqualTo}) {
-    // TODO Later: Add optional query params
     CollectionReference postCollection = Firestore.instance.collection('posts');
     if (on != null && onValueEqualTo != null) {
       return postCollection
@@ -134,7 +133,6 @@ class DatabaseService {
       String on,
       String onValueEqualTo,
       @required String postID}) {
-    // TODO Later: Add optional query params
     CollectionReference commentCollection = Firestore.instance
         .collection('posts')
         .document(postID)
@@ -219,7 +217,7 @@ class DatabaseService {
   // -start- ORGANISATION Getters
   Future<Organisation> getOrganisation(String organisationID) async {
     CollectionReference organisationCollection =
-    Firestore.instance.collection('organisations');
+        Firestore.instance.collection('organisations');
     DocumentSnapshot document =
     await organisationCollection.document(organisationID).get();
     Organisation organisation = Organisation.fromDocSnapshot(document);
@@ -241,7 +239,6 @@ class DatabaseService {
 
   Stream<List<Organisation>> getOrganisationListStream(
       {String orderBy = 'fullName'}) {
-    // TODO Later: Add optional query params
     CollectionReference organisationCollection =
         Firestore.instance.collection('organisations');
     return organisationCollection
@@ -287,12 +284,16 @@ class DatabaseService {
     String organisationID = orgRef.documentID;
     CollectionReference memberCollection =
     Firestore.instance.collection('members');
-    await Future.forEach(members, (member) async {
+    await Future.forEach(members, (Member member) async {
       member.organisationID = organisationID;
       member.addedBy = currentUserID;
       member.joiningDate = DateTime.now();
-      DocumentReference memberRef = await memberCollection.add(member.toJson());
-      organisation.members.add(memberRef.documentID);
+      member.state = 'Accepted';
+
+      String mixKeyMember = getMixKey(organisationID, member.userID);
+      DocumentReference memberRef = memberCollection.document(mixKeyMember);
+      memberRef.setData(member.toJson());
+      organisation.members.add(mixKeyMember);
     });
 
     if (imageFile != null) {
@@ -305,13 +306,41 @@ class DatabaseService {
     await orgRef.setData(organisation.toJson());
   }
 
+  void updateOrganisationAndMembers(Organisation organisation,
+      List<Member> members, File imageFile) async {
+    //create the Organisation document, then create all members document, get the ID and put it into the orga document
+
+    CollectionReference organisationCollection =
+    Firestore.instance.collection('organisations');
+
+    DocumentReference orgRef = organisationCollection.document(organisation.id);
+    CollectionReference memberCollection =
+    Firestore.instance.collection('members');
+    organisation.members = []; // Reinitialise the members
+    await Future.forEach(members, (Member member) async {
+      String mixKeyMember = getMixKey(organisation.id, member.userID);
+      DocumentReference memberRef = memberCollection.document(mixKeyMember);
+      memberRef.setData(member.toJson());
+      organisation.members.add(mixKeyMember);
+    });
+
+    if (imageFile != null) {
+      String collection = 'organisations_images';
+      String fileName = organisation.id;
+      organisation.imageURL = getFileURL(collection, fileName);
+      this.uploadFile(imageFile, collection, fileName);
+    }
+    //Remove duplicates members
+    organisation.members = organisation.members.toSet().toList();
+    print('NEW members: ${organisation.members.toString()}');
+    await orgRef.setData(organisation.toJson(), merge: true);
+  }
   // -end- ORGANISATION Getters
 
   // -start- MEMBER Getters
   //Get the member list of a user or an organisation
   Stream<List<Member>> getMemberListStream(
       {String on, String onValueEqualTo, String orderBy = 'joiningDate'}) {
-    // TODO Later: Add optional query params
     CollectionReference memberCollection =
         Firestore.instance.collection('members');
 
@@ -323,7 +352,6 @@ class DatabaseService {
   }
 
   Future<List<Member>> getMemberList({String on, String onValueEqualTo}) async {
-    // TODO Later: Add optional query params
     List<Member> memberList = [];
     CollectionReference memberCollection =
     Firestore.instance.collection('members');
@@ -361,6 +389,30 @@ class DatabaseService {
     return snapshot.documents.map((doc) {
       return Member.fromDocSnapshot(doc);
     }).toList();
+  }
+
+  //Will create a member and also update the organisation to put the member within it
+  void createMember(Member member) async {
+    CollectionReference memberCollection =
+    Firestore.instance.collection('members');
+    DocumentReference memberRef = await memberCollection.add(member.toJson());
+    //TODO: Is the folowing necessary ? should we put it only when the state is accepted ?
+    //if(member.state == 'Accepted')
+    CollectionReference organisationCollection =
+    Firestore.instance.collection('organisations');
+    DocumentReference orgRef =
+    organisationCollection.document(member.organisationID);
+
+    orgRef.updateData({
+      "members": FieldValue.arrayUnion([memberRef.documentID])
+    });
+  }
+
+  void deleteMember(String memberID) async {
+    CollectionReference memberCollection =
+    Firestore.instance.collection('members');
+    DocumentReference memberRef = memberCollection.document(memberID);
+    memberRef.delete();
   }
 
 // -end- MEMBER Getters

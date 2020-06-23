@@ -307,12 +307,11 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
           )),
           Checkbox(
               value: _gapYear,
-              onChanged: (bool value) =>
-              {
-                setState(() {
-                  _gapYear = value;
-                }),
-              })
+              onChanged: (bool value) => {
+                    setState(() {
+                      _gapYear = value;
+                    }),
+                  })
         ],
       ),
     );

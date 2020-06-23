@@ -16,15 +16,19 @@ import 'package:meuh_life/services/DatabaseService.dart';
 
 class ConversationScreen extends StatefulWidget {
   final ChatRoom chatRoom;
-  final Profile toProfile; // Profile talking to, avoid making the call here
+  final Profile
+      toProfile; // Profile talking in order to avoid making the call here
   final Organisation
       toOrganisation; // Organisation talking to, avoid making the call here
-  final String userID;
+  final String userID; // ID of the current user talking
+  final String
+  asOrganisation; // The current user is talking as an organisation, ID of the organisation the one is talking as
 
   const ConversationScreen({Key key,
     @required this.chatRoom,
     this.toProfile,
     this.toOrganisation,
+    this.asOrganisation,
     @required this.userID})
       : super(key: key);
 
@@ -39,6 +43,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
   File _imageFile;
   Widget _toAvatar;
   String _title = '';
+  double _avatarRadius = 20.0;
 
   final TextEditingController textEditingController = TextEditingController();
 
@@ -47,23 +52,31 @@ class _ConversationScreenState extends State<ConversationScreen> {
   @override
   void initState() {
     super.initState();
-    const double avatar_radius = 20.0;
 
     setState(() {
       switch (widget.chatRoom.type) {
         case 'SINGLE_USER':
           if (widget.toProfile != null) {
-            _toAvatar = widget.toProfile.getCircleAvatar(radius: avatar_radius);
+            _toAvatar = widget.toProfile.getCircleAvatar(radius: _avatarRadius);
             _title = widget.toProfile.fullName;
           }
           break;
 
         case 'SINGLE_ORGANISATION':
-          if (widget.toOrganisation != null) {
+          if (widget.asOrganisation != null && widget.asOrganisation != '') {
+            if (widget.toProfile != null) {
+              _toAvatar =
+                  widget.toProfile.getCircleAvatar(radius: _avatarRadius);
+              _title = widget.toProfile.fullName;
+            }
+            print('I am  As organisation: ${widget.asOrganisation}');
+          } else if (widget.toOrganisation.id != null) {
             _toAvatar =
-                widget.toOrganisation.getCircleAvatar(radius: avatar_radius);
+                widget.toOrganisation.getCircleAvatar(radius: _avatarRadius);
             _title = widget.toOrganisation.fullName;
+            print('I am  orga: ${widget.toOrganisation.id}');
           }
+
           break;
 
         case 'GROUP':
@@ -113,7 +126,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
               itemCount: _messages.length,
               itemBuilder: (BuildContext context, int index) {
                 Message message = _messages[index];
-                bool isLeftMessage = message.author != widget.userID;
+                bool isLeftMessage = checkIfLeftMessage(message);
 
                 if (isLeftMessage) {
                   return buildLeftItem(message, isLastMessageLeft(index));
@@ -126,8 +139,16 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
+  bool checkIfLeftMessage(Message message) {
+    bool asOrganisation =
+        widget.asOrganisation != null && widget.asOrganisation != '';
+    if (asOrganisation) return widget.asOrganisation != message.organisationID;
+    bool isLeftMessage = message.author != widget.userID;
+
+    return isLeftMessage;
+  }
+
   Widget buildLeftItem(Message message, bool isLastMessageLeft) {
-    double avatarRadius = 12.0;
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, left: 4, right: 80, bottom: 4),
       child: Row(
@@ -136,29 +157,53 @@ class _ConversationScreenState extends State<ConversationScreen> {
           if (isLastMessageLeft) _toAvatar,
           if (!isLastMessageLeft)
             SizedBox(
-              width: avatarRadius * 2,
+              width: _avatarRadius * 2,
             ),
           Expanded(
-            child: Bubble(
-              alignment: Alignment.topLeft,
-              color: Colors.grey.shade200,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  if (message.type == 'IMAGE')
-                    Image(
-                      image: FirebaseImage(message.imageURL),
-                    ),
-                  Text(
-                    message.content,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Bubble(
+                  alignment: Alignment.topLeft,
+                  color: Colors.grey.shade200,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      if (message.type == 'IMAGE')
+                        Image(
+                          image: FirebaseImage(message.imageURL),
+                        ),
+                      Text(
+                        message.content,
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                if (message.asOrganisation) getAuthorProfile(message.author),
+              ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget getAuthorProfile(String authorID) {
+    return FutureBuilder(
+        future: _database.getProfile(authorID),
+        builder: (context, AsyncSnapshot<Profile> snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+          Profile profile = snapshot.data;
+          return Padding(
+            padding: const EdgeInsets.only(left: 14.0),
+            child: Text(
+              profile.firstName,
+              style: TextStyle(fontSize: 12.0),
+            ),
+          );
+        });
   }
 
   Widget buildRightItem(Message message, bool isLastMessageRight) {
@@ -167,35 +212,40 @@ class _ConversationScreenState extends State<ConversationScreen> {
       child: Row(
         children: <Widget>[
           Expanded(
-            child: Bubble(
-              margin: BubbleEdges.only(top: 10),
-              alignment: Alignment.topRight,
-              color: Colors.amber.shade800,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  if (message.type == 'IMAGE')
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                ImageViewScreen(imageURL: message.imageURL),
+            child: Column(
+              children: <Widget>[
+                Bubble(
+                  margin: BubbleEdges.only(top: 10),
+                  alignment: Alignment.topRight,
+                  color: Colors.amber.shade800,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      if (message.type == 'IMAGE')
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ImageViewScreen(imageURL: message.imageURL),
+                              ),
+                            );
+                          },
+                          child: Image(
+                            image: FirebaseImage(message.imageURL),
+                            width: 200,
                           ),
-                        );
-                      },
-                      child: Image(
-                        image: FirebaseImage(message.imageURL),
-                        width: 200,
+                        ),
+                      Text(
+                        message.content,
+                        style: TextStyle(color: Colors.white),
                       ),
-                    ),
-                  Text(
-                    message.content,
-                    style: TextStyle(color: Colors.white),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                if (message.asOrganisation) getAuthorProfile(message.author),
+              ],
             ),
           ),
         ],
@@ -300,7 +350,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
                       content: textEditingController.text,
                       creationDate: DateTime.now(),
                       author: widget.userID,
-                      asOrganisation: false,
+                      asOrganisation: widget.asOrganisation != null &&
+                          widget.asOrganisation != '',
+                      organisationID: widget.asOrganisation,
                     );
                     sendMessage(newMessage, widget.chatRoom);
                   }

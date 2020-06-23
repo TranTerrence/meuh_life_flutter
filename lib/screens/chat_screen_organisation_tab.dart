@@ -35,7 +35,6 @@ class _OrganisationChatsTabState extends State<OrganisationChatsTab> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     setState(() {
       getChatRooms();
@@ -166,18 +165,10 @@ class _OrganisationChatsTabState extends State<OrganisationChatsTab> {
         child: Text('TEST'),
       );
     } else {
-      Widget item;
-      switch (chatRoom.type) {
-        case "SINGLE_USER":
-          item = getProfileItem(chatRoom);
-          print('SINGLE USER');
-          break;
+      // There is only Single Organisation or Group chat possible
+      Widget item = getOrganisationToUserItem(chatRoom, widget.userID);
+      print('SINGLE ORGA');
 
-        case 'SINGLE_ORGANISATION':
-          item = getOrganisationItem(chatRoom, widget.userID);
-          print('SINGLE ORGA');
-          break;
-      }
       return Column(
         children: <Widget>[
           SizedBox(
@@ -190,61 +181,7 @@ class _OrganisationChatsTabState extends State<OrganisationChatsTab> {
     }
   }
 
-  Widget getProfileItem(ChatRoom chatRoom) {
-    String toUserID = chatRoom.getToUserID(widget.userID);
-
-    return FutureBuilder(
-        future: _database.getProfile(toUserID),
-        builder: (context, AsyncSnapshot<Profile> snapshot) {
-          if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
-          }
-          Profile profile = snapshot.data;
-          return InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => ConversationScreen(
-                          chatRoom: chatRoom,
-                          toProfile: profile,
-                          userID: widget.userID,
-                        )),
-              );
-            },
-            child: Row(
-              children: <Widget>[
-                SizedBox(
-                  width: 8.0,
-                ),
-                profile.getCircleAvatar(radius: 24.0),
-                SizedBox(
-                  width: 8.0,
-                ),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        profile.fullName + ' (${profile.promoWithP})',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        chatRoom.lastMessage,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      )
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        });
-  }
-
-  Widget getOrganisationItem(ChatRoom chatRoom, String currentUserID) {
+  Widget getOrganisationToUserItem(ChatRoom chatRoom, String currentUserID) {
     String toOrganisationID = chatRoom.getToOrganisationID();
     String toUserID = chatRoom
         .getToUserID(currentUserID); // Return the first userID that is not null
@@ -266,8 +203,10 @@ class _OrganisationChatsTabState extends State<OrganisationChatsTab> {
                 MaterialPageRoute(
                     builder: (context) => ConversationScreen(
                           chatRoom: chatRoom,
+                          toProfile: profile,
                           toOrganisation: organisation,
-                          userID: currentUserID, // TODO find get the USER ID
+                      userID: currentUserID,
+                      asOrganisation: organisation.id,
                         )),
               );
             },

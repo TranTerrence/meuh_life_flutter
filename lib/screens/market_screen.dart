@@ -42,10 +42,10 @@ class _MarketScreenState extends State<MarketScreen>
       Tab(text: 'Memes'), //icon: Icon(Icons.color_lens),
     ];
     List<Widget> tabContent = [
-      showPostList(on: 'type', onValueEqualTo: 'EVENT'),
-      showPostList(on: 'type', onValueEqualTo: 'ANNOUNCE'),
+      showPostList(on: 'type', onValueEqualTo: 'EVENT', key: 'EVENT'),
+      showPostList(on: 'type', onValueEqualTo: 'ANNOUNCE', key: 'ANNOUNCE'),
       showPostList(),
-      showPostList(on: 'type', onValueEqualTo: 'MEMES'),
+      showPostList(on: 'type', onValueEqualTo: 'MEMES', key: 'MEMES'),
     ];
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
@@ -84,19 +84,20 @@ class _MarketScreenState extends State<MarketScreen>
     );
   }
 
-  Widget showPostList({String on, String onValueEqualTo}) {
+  Widget showPostList({String on, String onValueEqualTo, String key}) {
     return (Container(
       child: StreamBuilder(
         stream:
             database.getPostListStream(on: on, onValueEqualTo: onValueEqualTo),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(),
             );
           } else {
             List<Post> posts = snapshot.data;
             return ListView.builder(
+              key: PageStorageKey(key),
               padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
               itemBuilder: (context, index) {
                 Post post = posts[index];

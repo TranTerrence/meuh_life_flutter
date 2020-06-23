@@ -8,19 +8,36 @@ import 'package:meuh_life/services/DatabaseService.dart';
 class Member {
   // Keys : value to show, only the keys should be saved, the value serves only the UI
   static const roles = {
-    'Admin': 'Admin',
-    'Member': 'Membre',
     'Owner': 'Propriétaire',
-    'Publisher': 'Publisher'
+    'Admin': 'Admin',
+    'Publisher': 'Publisher',
+    'Member': 'Membre',
   };
 
-  String id = '';
+  static const states = {
+    'Requested': 'Demande envoyée',
+    'Accepted': 'Accepté',
+  };
+
+  String id;
   String userID = ''; // userID of the member
   String organisationID = 'Oganisation ID';
   String role = 'Member';
+  String state = 'Accepted'; // TODO : Manage this
+
   String position = ''; // President, tresorier ,...
   String addedBy = '';
   DateTime joiningDate = DateTime.now();
+
+  Member(
+      {this.id,
+      this.userID,
+      this.organisationID,
+      this.role,
+      this.position,
+      this.addedBy,
+      this.joiningDate,
+      this.state});
 
   Member.fromUserID(String userID) {
     this.userID = userID;
@@ -31,6 +48,7 @@ class Member {
     this.userID = document['userID']; // userID of the member
     this.organisationID = document['organisationID'];
     this.role = document['role'];
+    this.state = document['state'] ?? 'Accepted';
     this.position = document['position']; // President, tresorier ,...
     this.addedBy = document['addedBy'];
     this.joiningDate = document['joiningDate'] != null
@@ -43,6 +61,7 @@ class Member {
     this.userID = map['userID']; // userID of the member
     this.organisationID = map['organisationID'];
     this.role = map['role'];
+    this.state = map['state'];
     this.position = map['position']; // President, tresorier ,...
     this.addedBy = map['addedBy'];
     //this.joiningDate = map['joiningDate'] != null ? map['joiningDate'].toDate() : null;
@@ -130,10 +149,10 @@ class Member {
 
   toJson() {
     return {
-      "id": this.id,
       "userID": this.userID,
       "organisationID": this.organisationID,
       "role": this.role,
+      "state": this.state,
       "position": this.position,
       "addedBy": this.addedBy,
       "joiningDate": this.joiningDate
@@ -150,6 +169,8 @@ class Member {
         return this.organisationID;
       case 'role':
         return this.role;
+      case 'state':
+        return this.state;
       case 'position':
         return this.position;
       case 'joiningDate':

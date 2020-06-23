@@ -5,48 +5,45 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
 import 'package:meuh_life/models/Member.dart';
 import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
-import 'package:meuh_life/services/HivePrefs.dart';
 import 'package:meuh_life/services/utils.dart';
 
-class CreateOrganisationScreen extends StatefulWidget {
-  CreateOrganisationScreen(this.userID);
+class EditOrganisationScreen extends StatefulWidget {
+  EditOrganisationScreen({this.userID, this.organisation});
 
   final String userID;
+  final Organisation organisation;
 
   @override
-  _CreateOrganisationScreenState createState() =>
-      _CreateOrganisationScreenState();
+  _EditOrganisationScreenState createState() => _EditOrganisationScreenState();
 }
 
-class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
+class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
   final _formKey = GlobalKey<FormState>();
-  Organisation _organisation = Organisation();
   List<Member> _members = [];
-  String _locale = 'fr';
-  DateFormat format = DateFormat('EEEE dd MMMM à HH:mm');
+  Organisation _organisation;
   File _imageFile;
   DatabaseService _database = DatabaseService();
   List<Profile> _profiles;
+  List<String> _memberIDToRemove = [];
 
   @override
   void initState() {
     super.initState();
-
-    initializeDateFormatting(_locale, null).then((_) {
-      setState(() {
-        format = DateFormat('EEEE dd MMMM à HH:mm', _locale);
-      });
-    });
+    _organisation = widget.organisation;
+    getMembers();
     getProfiles();
-    Member creaMember = Member.fromUserID(widget.userID);
-    creaMember.role = 'Owner';
-    _members.add(creaMember);
+  }
+
+  void getMembers() async {
+    List<Member> members = await _database.getMemberList(
+        on: 'organisationID', onValueEqualTo: widget.organisation.id);
+    setState(() {
+      _members = members;
+    });
   }
 
   void getProfiles() async {
@@ -64,7 +61,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
 
   Profile getProfile(String userID) {
     if (_profiles != null)
-      return _profiles.singleWhere((profile) => profile.id == userID); // 3
+      return _profiles.singleWhere((profile) => profile.id == userID);
   }
 
   @override
@@ -72,7 +69,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade800,
-        title: Text('Créer une organisation'),
+        title: Text('Modifier une organisation'),
       ),
       body: SingleChildScrollView(
         child: Form(
@@ -122,7 +119,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
       return Center(
         child: InkWell(
             onTap: () => _showSelectPictureMenu(),
-            child: _organisation.getCircleAvatar()),
+            child: widget.organisation.getCircleAvatar()),
       );
     }
   }
@@ -203,6 +200,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
 
   Widget showNameField() {
     return TextFormField(
+      initialValue: _organisation.fullName,
       onSaved: (String value) {
         _organisation.fullName = value;
       },
@@ -227,6 +225,7 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 32.0),
       child: TextFormField(
+        initialValue: _organisation.description,
         minLines: 2,
         maxLines: null,
         cursorColor: Colors.blue.shade800,
@@ -389,52 +388,75 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
                   child: CircularProgressIndicator(),
                 );
               }
-              return Padding(
-                padding: const EdgeInsets.only(top: 8.0, right: 8.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    profile.getCircleAvatar(radius: 24.0),
-                    SizedBox(
-                      width: 8.0,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            profile.fullName + ' (P${profile.promo})',
-                            style: TextStyle(
-                                fontSize: 16.0, fontWeight: FontWeight.bold),
-                          ),
-                          TextFormField(
-                            initialValue: _members[index].position,
-                            decoration: const InputDecoration(
-                              labelText: "Position dans l'organisation",
-                              hintText: 'Président, trésorier, VP...',
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 16.0, horizontal: 8.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      profile.getCircleAvatar(radius: 24.0),
+                      SizedBox(
+                        width: 8.0,
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              profile.fullName + ' (P${profile.promo})',
+                              style: TextStyle(
+                                  fontSize: 16.0, fontWeight: FontWeight.bold),
                             ),
-                            onChanged: (text) {
-                              setState(() {
-                                _members[index].position = text;
-                              });
-                            },
-                          ),
-                          DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: _members[index].role,
-                              icon: Icon(Icons.arrow_drop_down),
-                              onChanged: (String newValue) {
+                            TextFormField(
+                              initialValue: _members[index].position,
+                              decoration: const InputDecoration(
+                                labelText: "Position dans l'organisation",
+                                hintText: 'Président, trésorier, VP...',
+                              ),
+                              onChanged: (text) {
                                 setState(() {
-                                  _members[index].role = newValue;
+                                  _members[index].position = text;
                                 });
                               },
-                              items: createDropdownMenuItemList(Member.roles),
                             ),
-                          ),
-                        ],
+                            DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: _members[index].role,
+                                icon: Icon(Icons.arrow_drop_down),
+                                onChanged: (String newValue) {
+                                  setState(() {
+                                    _members[index].role = newValue;
+                                  });
+                                },
+                                items: createDropdownMenuItemList(Member.roles),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+
+                      //TODO: Show this icon only if allow
+                      if (_members[index].role != 'Owner')
+                        IconButton(
+                          onPressed: () {
+                            String memberID = getMixKey(
+                                _members[index].userID, widget.organisation.id);
+                            print('REMOVE $memberID');
+                            if (!_memberIDToRemove.contains(memberID))
+                              _memberIDToRemove.add(memberID);
+                            print('REMOVE ${_memberIDToRemove.toString()}');
+                            setState(() {
+                              _members.removeAt(index);
+                            });
+                          },
+                          icon: Icon(
+                            Icons.delete,
+                            color: Colors.grey,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               );
             }),
@@ -492,6 +514,11 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
                               } else {
                                 Member newMember =
                                     Member.fromUserID(profile.id);
+                                newMember.organisationID =
+                                    widget.organisation.id;
+                                newMember.addedBy = widget.userID;
+                                newMember.joiningDate = DateTime.now();
+                                newMember.state = 'Accepted';
                                 _members.add(newMember);
                               }
                             });
@@ -583,11 +610,12 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
               if (_formKey.currentState.validate()) {
                 _formKey.currentState.save();
                 uploadDataToFirebase();
+                removeMembers();
                 Navigator.pop(context);
               }
             },
             child: Text(
-              "Créer l'organisation",
+              "Enregistrer les changements",
               style: TextStyle(fontSize: 16.0),
             ),
           ),
@@ -596,15 +624,33 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
     );
   }
 
+  void removeMembers() async {
+    if (_memberIDToRemove.length > 0) {
+      //Remove duplicates memberIDs
+      _memberIDToRemove = _memberIDToRemove.toSet().toList();
+
+      //Remove IDs that were added again
+      List<String> newMemberID = _members
+          .map((Member member) =>
+              getMixKey(member.userID, member.organisationID))
+          .toList();
+      _memberIDToRemove = _memberIDToRemove
+          .where((memberID) => !newMemberID.contains(memberID))
+          .toList();
+
+      _memberIDToRemove.forEach((String memberID) {
+        _database.deleteMember(memberID);
+      });
+    }
+  }
+
   void uploadDataToFirebase() async {
     print('SENDING DATA TO FIRESTORE');
     print(_organisation);
 
-    final preferences = await HivePrefs.getInstance();
-    _organisation.creatorID = preferences.getUserID();
-
+    // TODO: Manage the data update: maybe use a userID/orgaID doumentID key
     DatabaseService database = DatabaseService();
-    database.createOrganisationAndMembers(_organisation, _members, _imageFile);
+    database.updateOrganisationAndMembers(_organisation, _members, _imageFile);
   }
 }
 

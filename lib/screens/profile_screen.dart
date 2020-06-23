@@ -13,6 +13,8 @@ import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/providers/CurrentUser.dart';
 import 'package:meuh_life/screens/create_organisation_screen.dart';
+import 'package:meuh_life/screens/edit_organisation_screen.dart';
+import 'package:meuh_life/screens/join_organisation_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
 import 'package:provider/provider.dart';
 
@@ -37,6 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
+        key: PageStorageKey('profile_screen'),
         padding: EdgeInsets.all(16.0),
         child: StreamBuilder(
             stream: database.getProfileStream(currentUser.id),
@@ -481,6 +484,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
+                              JoinOrganisationScreen(userID: currentUser.id)),
+                    ),
+                  },
+                  icon: Icon(
+                    Icons.group_add,
+                    color: Colors.blue.shade800,
+                  ),
+                  label: Text('Rejoindre une organisation'),
+                ),
+              ),
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: OutlineButton.icon(
+                  onPressed: () => {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
                               CreateOrganisationScreen(currentUser.id)),
                     ),
                   },
@@ -554,6 +577,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget buildMember(BuildContext context, Member member) {
+    bool isOwner = member.role == 'Owner';
     return StreamBuilder(
         stream: database.getOrganisationStream(member.organisationID),
         builder: (context, snapshot) {
@@ -584,15 +608,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Text(organisation.fullName,
                                 style: TextStyle(fontWeight: FontWeight.bold)),
                             if (member.position != '') Text(member.position),
-                            Text(member.getRole()),
+                            Text(member.getRole() +
+                                (member.state == 'Requested'
+                                    ? ' (En Attente de validation)'
+                                    : '')),
                           ],
                         ),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
+                          if (isOwner)
+                            IconButton(
+                              icon: Icon(Icons.edit),
+                              color: Colors.blue.shade800,
+                              onPressed: () =>
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            EditOrganisationScreen(
+                                              userID: currentUser.id,
+                                              organisation: organisation,
+                                            )),
+                                  ),
+                            ),
                           Text(
                             '${organisation.members.length}',
+                            // TODO manage this error when member not accepted yet
                             style: TextStyle(
                                 fontSize: 18.0, color: Colors.blue.shade800),
                           ),

@@ -133,15 +133,12 @@ class _MyChatsTabState extends State<MyChatsTab> {
       switch (chatRoom.type) {
         case "SINGLE_USER":
           item = getProfileItem(chatRoom);
-          print('SINGLE USER');
           break;
 
         case 'SINGLE_ORGANISATION':
           item = getOrganisationItem(chatRoom);
-          print('SINGLE ORGA');
           break;
       }
-      print('THIS IS IT');
       return Column(
         children: <Widget>[
           SizedBox(
