@@ -219,7 +219,7 @@ class DatabaseService {
     CollectionReference organisationCollection =
         Firestore.instance.collection('organisations');
     DocumentSnapshot document =
-    await organisationCollection.document(organisationID).get();
+        await organisationCollection.document(organisationID).get();
     Organisation organisation = Organisation.fromDocSnapshot(document);
     return organisation;
   }

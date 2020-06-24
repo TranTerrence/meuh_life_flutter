@@ -62,7 +62,7 @@ class _JoinOrganisationScreenState extends State<JoinOrganisationScreen> {
     List<Member> memberOf = await _database.getMemberList(
         on: 'userID', onValueEqualTo: widget.userID);
 
-    // List of organisation that the user does nt belongs to
+    // List of organisation that the user does not belongs to
     List<Organisation> filteredOrgas =
         filterOrganisations(organisations, memberOf);
 
@@ -75,6 +75,8 @@ class _JoinOrganisationScreenState extends State<JoinOrganisationScreen> {
       builder: (context, AsyncSnapshot<List<Organisation>> snapshot) {
         if (!snapshot.hasData) {
           return Center(child: CircularProgressIndicator());
+        } else if (snapshot.data.length == 0) {
+          return Center(child: Text("Pas d'organisation à rejoindre"));
         }
         _organisations = snapshot.data;
         return ListView.builder(
