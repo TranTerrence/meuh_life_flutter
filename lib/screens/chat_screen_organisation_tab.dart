@@ -205,8 +205,8 @@ class _OrganisationChatsTabState extends State<OrganisationChatsTab> {
                           chatRoom: chatRoom,
                           toProfile: profile,
                           toOrganisation: organisation,
-                      userID: currentUserID,
-                      asOrganisation: organisation.id,
+                          userID: currentUserID,
+                          asOrganisation: organisation.id,
                         )),
               );
             },

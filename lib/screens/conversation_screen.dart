@@ -22,14 +22,15 @@ class ConversationScreen extends StatefulWidget {
       toOrganisation; // Organisation talking to, avoid making the call here
   final String userID; // ID of the current user talking
   final String
-  asOrganisation; // The current user is talking as an organisation, ID of the organisation the one is talking as
+      asOrganisation; // The current user is talking as an organisation, ID of the organisation the one is talking as
 
-  const ConversationScreen({Key key,
-    @required this.chatRoom,
-    this.toProfile,
-    this.toOrganisation,
-    this.asOrganisation,
-    @required this.userID})
+  const ConversationScreen(
+      {Key key,
+      @required this.chatRoom,
+      this.toProfile,
+      this.toOrganisation,
+      this.asOrganisation,
+      @required this.userID})
       : super(key: key);
 
   @override

@@ -420,9 +420,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         prefixIcon: Icon(Icons.euro_symbol),
       ),
       validator: (value) {
-        if ('.'
-            .allMatches(value)
-            .length > 1) {
+        if ('.'.allMatches(value).length > 1) {
           return "Le prix entrée n'est pas valide";
         }
         return null;

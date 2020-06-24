@@ -27,7 +27,7 @@ class ChatRoom {
       this.creatorID,
       this.type,
       this.users,
-        this.organisations,
+      this.organisations,
       this.lastMessageDate,
       this.creationDate});
 

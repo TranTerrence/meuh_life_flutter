@@ -375,13 +375,20 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
   }
 
   Widget showSelectedMembers() {
+    Map rolesWithoutOwner = Map.from(Member.roles);
+    rolesWithoutOwner.removeWhere((key, value) => key == 'Owner');
     if (_members != null && _members.length > 0) {
+      Member currentMember = _members
+          .firstWhere((Member member) => member.userID == widget.userID);
+      bool isAdmin = currentMember.role == 'Admin';
+      bool isOwner = currentMember.role == 'Owner';
       return Container(
         child: ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _members.length,
             itemBuilder: (BuildContext context, int index) {
+              bool isCurrentUser = _members[index].userID == widget.userID;
               Profile profile = getProfile(_members[index].userID);
               if (profile == null) {
                 return Center(
@@ -422,6 +429,8 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                             ),
                             DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
+                                disabledHint:
+                                    Text(Member.roles[_members[index].role]),
                                 value: _members[index].role,
                                 icon: Icon(Icons.arrow_drop_down),
                                 onChanged: (String newValue) {
@@ -429,7 +438,14 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                                     _members[index].role = newValue;
                                   });
                                 },
-                                items: createDropdownMenuItemList(Member.roles),
+                                items: (isOwner || isAdmin) &&
+                                    !isCurrentUser &&
+                                    (isAdmin &&
+                                        _members[index].role != 'Owner')
+                                    ? createDropdownMenuItemList(isAdmin
+                                    ? rolesWithoutOwner
+                                    : Member.roles)
+                                    : null,
                               ),
                             ),
                           ],
@@ -437,7 +453,7 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                       ),
 
                       //TODO: Show this icon only if allow
-                      if (_members[index].role != 'Owner')
+                      if (_members[index].role != 'Owner' && !isCurrentUser)
                         IconButton(
                           onPressed: () {
                             String memberID = getMixKey(
@@ -503,6 +519,7 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                       itemCount: profileFiltered.length,
                       itemBuilder: (BuildContext context, int index) {
                         Profile profile = profileFiltered[index];
+                        if (profile.id == widget.userID) return Container();
                         return InkWell(
                           onTap: () {
                             setStateDialog(() {});
@@ -514,8 +531,7 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                               } else {
                                 Member newMember =
                                     Member.fromUserID(profile.id);
-                                newMember.organisationID =
-                                    widget.organisation.id;
+                                newMember.organisationID = _organisation.id;
                                 newMember.addedBy = widget.userID;
                                 newMember.joiningDate = DateTime.now();
                                 newMember.state = 'Accepted';
@@ -559,6 +575,12 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                                         } else {
                                           Member newMember =
                                               Member.fromUserID(profile.id);
+                                          newMember.organisationID =
+                                              _organisation.id;
+                                          newMember.addedBy = widget.userID;
+                                          newMember.joiningDate =
+                                              DateTime.now();
+                                          newMember.state = 'Accepted';
                                           _members.add(newMember);
                                         }
                                       });
@@ -645,9 +667,6 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
   }
 
   void uploadDataToFirebase() async {
-    print('SENDING DATA TO FIRESTORE');
-    print(_organisation);
-
     // TODO: Manage the data update: maybe use a userID/orgaID doumentID key
     DatabaseService database = DatabaseService();
     database.updateOrganisationAndMembers(_organisation, _members, _imageFile);

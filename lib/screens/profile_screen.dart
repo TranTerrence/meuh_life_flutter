@@ -567,7 +567,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     File selected =
-    await ImagePicker.pickImage(source: source, imageQuality: 50);
+        await ImagePicker.pickImage(source: source, imageQuality: 50);
     if (selected != null) {
       setState(() {
         _imageFile = selected;
@@ -578,6 +578,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget buildMember(BuildContext context, Member member) {
     bool isOwner = member.role == 'Owner';
+    bool isAdmin = member.role == 'Admin';
+
+    bool canEditOrga = isOwner || isAdmin;
     return StreamBuilder(
         stream: database.getOrganisationStream(member.organisationID),
         builder: (context, snapshot) {
@@ -618,7 +621,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          if (isOwner)
+                          if (canEditOrga)
                             IconButton(
                               icon: Icon(Icons.edit),
                               color: Colors.blue.shade800,

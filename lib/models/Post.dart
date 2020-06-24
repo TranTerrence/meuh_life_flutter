@@ -250,7 +250,7 @@ class Post {
               child: getHeaderRow(
                   profile.getCircleAvatar(radius: avatarRadius),
                   '${profile.firstName} ${profile.lastName[0]}.'
-                      ' (P${profile.promo})'),
+                  ' (P${profile.promo})'),
             ),
           );
         });

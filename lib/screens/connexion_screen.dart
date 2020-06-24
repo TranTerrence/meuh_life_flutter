@@ -333,9 +333,9 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
           ),
           Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(left: 16.0),
-                child: Text('PAM (Pas à la Meuh)'),
-              )),
+            padding: const EdgeInsets.only(left: 16.0),
+            child: Text('PAM (Pas à la Meuh)'),
+          )),
           Checkbox(
               value: _isPAM,
               onChanged: (bool value) =>
