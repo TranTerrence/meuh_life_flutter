@@ -565,7 +565,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     _post.author = preferences.getUserID();
 
     DocumentReference docRef =
-    Firestore.instance.collection('posts').document();
+        Firestore.instance.collection('posts').document();
 
     print(_post.toJson());
     docRef.setData(_post.toJson());

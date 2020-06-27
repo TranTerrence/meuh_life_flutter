@@ -338,12 +338,11 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
           )),
           Checkbox(
               value: _isPAM,
-              onChanged: (bool value) =>
-              {
-                setState(() {
-                  _isPAM = value;
-                }),
-              })
+              onChanged: (bool value) => {
+                    setState(() {
+                      _isPAM = value;
+                    }),
+                  })
         ],
       ),
     );

@@ -78,7 +78,7 @@ class ChatRoom {
       organisations = List<String>.from(map['organisations']); //
     }
     lastMessageDate =
-    map['lastMessageDate'] != null ? map['lastMessageDate'].toDate() : null;
+        map['lastMessageDate'] != null ? map['lastMessageDate'].toDate() : null;
     creationDate =
     map['creationDate'] != null ? map['creationDate'].toDate() : null;
   }

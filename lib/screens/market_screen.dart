@@ -36,15 +36,15 @@ class _MarketScreenState extends State<MarketScreen>
   @override
   Widget build(BuildContext context) {
     List<Tab> tab = [
+      Tab(text: 'Tout'), //icon: Icon(Icons.announcement),
       Tab(text: 'Evenements'), //icon: Icon(Icons.event),
       Tab(text: 'Annonces'), //icon: Icon(Icons.announcement),
-      Tab(text: 'Tout'), //icon: Icon(Icons.announcement),
       Tab(text: 'Memes'), //icon: Icon(Icons.color_lens),
     ];
     List<Widget> tabContent = [
+      showPostList(),
       showPostList(on: 'type', onValueEqualTo: 'EVENT', key: 'EVENT'),
       showPostList(on: 'type', onValueEqualTo: 'ANNOUNCE', key: 'ANNOUNCE'),
-      showPostList(),
       showPostList(on: 'type', onValueEqualTo: 'MEMES', key: 'MEMES'),
     ];
     return NotificationListener<ScrollNotification>(

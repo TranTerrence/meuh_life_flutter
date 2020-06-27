@@ -625,16 +625,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             IconButton(
                               icon: Icon(Icons.edit),
                               color: Colors.blue.shade800,
-                              onPressed: () =>
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            EditOrganisationScreen(
-                                              userID: currentUser.id,
-                                              organisation: organisation,
-                                            )),
-                                  ),
+                              onPressed: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        EditOrganisationScreen(
+                                          userID: currentUser.id,
+                                          organisation: organisation,
+                                        )),
+                              ),
                             ),
                           Text(
                             '${organisation.members.length}',
