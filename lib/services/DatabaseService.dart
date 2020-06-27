@@ -249,7 +249,7 @@ class DatabaseService {
 
   Future<List<Organisation>> getOrganisationList() async {
     CollectionReference userCollection =
-    Firestore.instance.collection('organisations');
+        Firestore.instance.collection('organisations');
     QuerySnapshot querySnapshot = await userCollection.getDocuments();
     List<Organisation> list = _organisationListFromSnapshot(querySnapshot);
     return list;

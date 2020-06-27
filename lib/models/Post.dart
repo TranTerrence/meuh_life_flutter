@@ -186,7 +186,7 @@ class Post {
       padding: const EdgeInsets.fromLTRB(padding, 0, padding, 0),
       child: Text(
         this.title,
-        maxLines: 3,
+        //maxLines: 3,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(fontSize: 18.0),
       ),
@@ -200,8 +200,8 @@ class Post {
         child: Text(
           this.description,
           softWrap: true,
-          maxLines: 5,
-          overflow: TextOverflow.ellipsis,
+          //maxLines: 5,
+          //overflow: TextOverflow.ellipsis,
           style: TextStyle(fontSize: 14.0),
         ),
       );
@@ -341,7 +341,7 @@ class Post {
                       likeCount: this.reactionCount ?? 0,
                       countBuilder: (int count, bool isLiked, String text) {
                         Color color =
-                        isLiked ? Colors.blue.shade800 : Colors.grey;
+                            isLiked ? Colors.blue.shade800 : Colors.grey;
                         Widget result = Text(
                           count > 0 ? text : '',
                           style: TextStyle(
