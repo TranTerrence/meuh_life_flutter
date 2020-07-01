@@ -396,6 +396,9 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                 );
               }
               return Card(
+                color: _members[index].state == 'Requested'
+                    ? Colors.amber.shade400
+                    : null,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                       vertical: 16.0, horizontal: 8.0),
@@ -410,6 +413,8 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
+                            if (_members[index].state == 'Requested')
+                              Text("Souhaite rejoindre l'organisation"),
                             Text(
                               profile.fullName + ' (P${profile.promo})',
                               style: TextStyle(
@@ -430,7 +435,7 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                             DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 disabledHint:
-                                    Text(Member.roles[_members[index].role]),
+                                Text(Member.roles[_members[index].role]),
                                 value: _members[index].role,
                                 icon: Icon(Icons.arrow_drop_down),
                                 onChanged: (String newValue) {
@@ -439,9 +444,8 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                                   });
                                 },
                                 items: (isOwner || isAdmin) &&
-                                        !isCurrentUser &&
-                                        (isAdmin &&
-                                            _members[index].role != 'Owner')
+                                    !isCurrentUser &&
+                                        (_members[index].role != 'Owner')
                                     ? createDropdownMenuItemList(isAdmin
                                     ? rolesWithoutOwner
                                     : Member.roles)
@@ -469,6 +473,21 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                           icon: Icon(
                             Icons.delete,
                             color: Colors.grey,
+                          ),
+                        ),
+                      if (_members[index].state == 'Requested')
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _members[index].state = 'Accepted';
+                              _members[index].addedBy = widget.userID;
+                              _members[index].joiningDate = DateTime.now();
+                            });
+                            print('accepder');
+                          },
+                          icon: Icon(
+                            Icons.check,
+                            color: Colors.green,
                           ),
                         ),
                     ],

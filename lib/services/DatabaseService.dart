@@ -283,7 +283,7 @@ class DatabaseService {
     DocumentReference orgRef = organisationCollection.document();
     String organisationID = orgRef.documentID;
     CollectionReference memberCollection =
-    Firestore.instance.collection('members');
+        Firestore.instance.collection('members');
     await Future.forEach(members, (Member member) async {
       member.organisationID = organisationID;
       member.addedBy = currentUserID;
@@ -395,7 +395,30 @@ class DatabaseService {
   void createMember(Member member) async {
     CollectionReference memberCollection =
     Firestore.instance.collection('members');
-    DocumentReference memberRef = await memberCollection.add(member.toJson());
+    String mixKeyMember = getMixKey(member.organisationID, member.userID);
+    DocumentReference memberRef = await memberCollection.document(mixKeyMember);
+    memberRef.setData(member.toJson());
+
+    //Only add a reference in the Organisation if it has been acepted
+    if (member.state == 'Accepted') {
+      CollectionReference organisationCollection =
+      Firestore.instance.collection('organisations');
+      DocumentReference orgRef =
+      organisationCollection.document(member.organisationID);
+
+      orgRef.updateData({
+        "members": FieldValue.arrayUnion([memberRef.documentID])
+      });
+    }
+  }
+
+  void updateMember(Member member) async {
+    CollectionReference memberCollection =
+    Firestore.instance.collection('members');
+    String mixKeyMember = getMixKey(member.organisationID, member.userID);
+    DocumentReference memberRef = await memberCollection.document(mixKeyMember);
+    memberRef.updateData(member.toJson());
+
     //TODO: Is the folowing necessary ? should we put it only when the state is accepted ?
     //if(member.state == 'Accepted')
     CollectionReference organisationCollection =

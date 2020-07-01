@@ -17,6 +17,7 @@ class Organisation {
   List<String> members = []; // List of members
   bool isVerified = false;
 
+  //TODO : Add field number of request
   Organisation();
 
   Organisation.fromDocSnapshot(DocumentSnapshot document) {

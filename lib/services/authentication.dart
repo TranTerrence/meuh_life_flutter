@@ -14,6 +14,8 @@ abstract class BaseAuth {
 
   Future<void> signOut();
 
+  Future<void> resetPassword(String email);
+
   Future<bool> isEmailVerified();
 }
 
@@ -58,5 +60,9 @@ class Auth implements BaseAuth {
     ref.updateData({"isEmailVerified": user.isEmailVerified});
 
     return user.isEmailVerified;
+  }
+
+  Future<void> resetPassword(String email) async {
+    await _firebaseAuth.sendPasswordResetEmail(email: email);
   }
 }

@@ -17,7 +17,7 @@ class ConnexionScreen extends StatefulWidget {
 
 class _ConnexionScreenState extends State<ConnexionScreen> {
   final _formKey = new GlobalKey<FormState>();
-
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   String _fullName;
   String _password;
   String _promo;
@@ -121,12 +121,13 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
+        key: _scaffoldKey,
         body: Stack(
-      children: <Widget>[
-        _showForm(),
-        _showCircularProgress(),
-      ],
-    ));
+          children: <Widget>[
+            _showForm(),
+            _showCircularProgress(),
+          ],
+        ));
   }
 
   Widget _showCircularProgress() {
@@ -179,6 +180,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
                 if (!_isLoginForm) showPAMInput(),
                 if (!_isLoginForm) showTypeSelect(),
                 showPrimaryButton(),
+                if (_isLoginForm) showForgetPasswordButton(),
                 showSecondaryButton(),
                 showErrorMessage(),
               ],
@@ -388,9 +390,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
           icon: Icon(
             // Based on passwordVisible state choose the icon
             _passwordVisible ? Icons.visibility : Icons.visibility_off,
-            color: Theme
-                .of(context)
-                .primaryColorDark,
+            color: Theme.of(context).primaryColorDark,
           ),
           onPressed: () {
             // Update the state i.e. toogle the state of passwordVisible variable
@@ -409,18 +409,6 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
     );
   }
 
-  Widget showSecondaryButton() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16.0),
-      child: new FlatButton(
-          child: new Text(
-              _isLoginForm ? 'Créer un compte' : 'Déjà un compte? Connecte toi',
-              style:
-              new TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300)),
-          onPressed: toggleFormMode),
-    );
-  }
-
   Widget showPrimaryButton() {
     return new Padding(
       padding: EdgeInsets.fromLTRB(0.0, 16.0, 0.0, 0.0),
@@ -436,6 +424,110 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
           onPressed: validateAndSubmit,
         ),
       ),
+    );
+  }
+
+  Widget showForgetPasswordButton() {
+    return new Padding(
+      padding: EdgeInsets.only(top: 8.0),
+      child: FlatButton(
+        child: Text('Mot de passe oublié',
+            style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300)),
+        onPressed: () => showResetPWDDialog(),
+      ),
+    );
+  }
+
+  void showResetPWDDialog() {
+    String fullName = '';
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return WillPopScope(
+          onWillPop: () {},
+          child: AlertDialog(
+            title: Text("Réinitialiser le mot de passe"),
+            content: Form(
+              key: formKey,
+              child: Wrap(
+                children: <Widget>[
+                  TextFormField(
+                    initialValue: '',
+                    onChanged: (String newValue) =>
+                    fullName = newValue.replaceAll(' ', ''),
+                    decoration: new InputDecoration(
+                      border: new OutlineInputBorder(
+                          borderSide:
+                          new BorderSide(color: Colors.blue.shade800)),
+                      labelText: 'prenom.nom',
+                    ),
+                    validator: (value) =>
+                    value
+                        .split('.')
+                        .length != 2
+                        ? 'doit être de la forme prénom.nom'
+                        : null,
+                  ),
+                  Text(
+                    '@mines-paristech.fr',
+                    style: TextStyle(
+                        color: Colors.blue.shade800,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              new FlatButton(
+                child: new Text("Annuler"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              new FlatButton(
+                child: new Text("Reinitialiser"),
+                onPressed: () {
+                  String email = fullName + '@mines-paristech.fr';
+                  final form = formKey.currentState;
+                  print('Reset password of : $email');
+                  if (form.validate()) {
+                    widget.auth.resetPassword(email);
+
+                    final snackBar = SnackBar(
+                      content: Text(
+                          'Un email de réinitialisation a été envoyé à\n$email'),
+                      action: SnackBarAction(
+                        label: '✖',
+                        onPressed: () {
+                          // Some code to undo the change.
+                          (_scaffoldKey.currentState).hideCurrentSnackBar();
+                        },
+                      ),
+                    );
+                    (_scaffoldKey.currentState).showSnackBar(snackBar);
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget showSecondaryButton() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: new FlatButton(
+          child: new Text(
+              _isLoginForm ? 'Créer un compte' : 'Déjà un compte? Connecte toi',
+              style:
+              new TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300)),
+          onPressed: toggleFormMode),
     );
   }
 }

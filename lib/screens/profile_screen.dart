@@ -635,9 +635,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         )),
                               ),
                             ),
+                          // TODO create a cloud function to retrieve the number of request
                           Text(
                             '${organisation.members.length}',
-                            // TODO manage this error when member not accepted yet
                             style: TextStyle(
                                 fontSize: 18.0, color: Colors.blue.shade800),
                           ),

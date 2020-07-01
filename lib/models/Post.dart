@@ -374,13 +374,12 @@ class Post {
                   ? ' (${this.commentCount})'
                   : '')),
           icon: Icon(Icons.comment),
-          onPressed: () =>
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CommentScreen(post: this),
-                ),
-              ),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CommentScreen(post: this),
+            ),
+          ),
         ),
         if (isCurrentUser)
           IconButton(
