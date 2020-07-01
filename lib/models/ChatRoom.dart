@@ -80,7 +80,7 @@ class ChatRoom {
     lastMessageDate =
         map['lastMessageDate'] != null ? map['lastMessageDate'].toDate() : null;
     creationDate =
-    map['creationDate'] != null ? map['creationDate'].toDate() : null;
+        map['creationDate'] != null ? map['creationDate'].toDate() : null;
   }
 
   String getToUserID(String currentUserID) {
