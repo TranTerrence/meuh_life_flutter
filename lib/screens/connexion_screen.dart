@@ -449,10 +449,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
                               new BorderSide(color: Colors.blue.shade800)),
                       labelText: 'prenom.nom',
                     ),
-                    validator: (value) =>
-                    value
-                        .split('.')
-                        .length != 2
+                    validator: (value) => value.split('.').length != 2
                         ? 'doit être de la forme prénom.nom'
                         : null,
                   ),
@@ -511,7 +508,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
           child: new Text(
               _isLoginForm ? 'Créer un compte' : 'Déjà un compte? Connecte toi',
               style:
-              new TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300)),
+                  new TextStyle(fontSize: 16.0, fontWeight: FontWeight.w300)),
           onPressed: toggleFormMode),
     );
   }
