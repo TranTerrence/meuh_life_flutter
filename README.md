@@ -1,3 +1,4 @@
+![Meuh Life logo](https://github.com/TranTerrence/meuh_life_flutter/blob/master/images/logo.png)
 # Meuh Life
 
 Meuh Life is a mobile App aiming to become the new social network of the school MINES ParisTech. 
