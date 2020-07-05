@@ -5,6 +5,10 @@ Meuh Life is a mobile App aiming to become the new social network of the school 
 It aims to provide a space to facilitate communication and inclusion within the school.
 This repository contains all the files for the mobile App Meuh Life.
 
+## About the project
+The project is born from the idea to provide a good project to train and learn flutter for the students. 
+To facilitate the development, we have used Firebase as a Backend.
+
 ## Getting Started
 
 ### 1 - Learn Flutter 
@@ -21,6 +25,9 @@ If you have Android Studio: Follow this video to learn [how to clone the project
 ### 4 - Launch the code on your phone or on the emulator
 Execute the `pub get` command to download the packages from `pubspec.yaml`.
 Then follow the [Section 4 of the tutorial](https://www.appbrewery.co/courses/851555/lectures/15448509)
+
+## Structure of the files
+
 
 ## Useful links
 A few resources to get you started if this is your first Flutter project:
