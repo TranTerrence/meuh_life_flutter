@@ -446,7 +446,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
                     decoration: new InputDecoration(
                       border: new OutlineInputBorder(
                           borderSide:
-                          new BorderSide(color: Colors.blue.shade800)),
+                              new BorderSide(color: Colors.blue.shade800)),
                       labelText: 'prenom.nom',
                     ),
                     validator: (value) =>

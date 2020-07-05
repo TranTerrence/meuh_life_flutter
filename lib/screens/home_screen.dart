@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meuh_life/screens/chat_screen.dart';
-import 'package:meuh_life/screens/market_screen.dart';
+import 'package:meuh_life/screens/mines_screen.dart';
 import 'package:meuh_life/screens/profile_screen.dart';
 import 'package:meuh_life/services/authentication.dart';
 

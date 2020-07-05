@@ -155,7 +155,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
                 showTypeField(),
                 if (widget.post.type == 'EVENT') showEventFields(),
                 if (widget.post.type == 'INTERNSHIP') showStageFields(),
-                showSubmitButton(),
+                showActionButtons(),
               ],
             ),
           ),
@@ -533,7 +533,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
     }
   }
 
-  Widget showSubmitButton() {
+  Widget showActionButtons() {
     return Padding(
       padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
       child: Wrap(
@@ -547,8 +547,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
               color: Colors.red.shade800,
               textColor: Colors.white,
               onPressed: () {
-                deletePost(_post);
-                Navigator.pop(context);
+                showDeleteDialog();
               },
               child: Text(
                 'Supprimer',
@@ -585,6 +584,40 @@ class _EditPostScreenState extends State<EditPostScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void showDeleteDialog() {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        // return object of type Dialog
+        return WillPopScope(
+          onWillPop: () {}, //Disable back button
+          child: AlertDialog(
+            title: Text("Es-tu sûr de vouloir supprimer le post?"),
+            content: Text(
+                "Une fois supprimé, les données associées seront perdues."),
+            actions: <Widget>[
+              FlatButton(
+                child: new Text("Annuler"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              FlatButton(
+                child: new Text("Supprimer"),
+                onPressed: () {
+                  deletePost(_post);
+                  Navigator.of(context).pop();
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

@@ -229,10 +229,14 @@ class Post {
 
   Widget showCreationDate() {
     timeago.setLocaleMessages('fr_short', timeago.FrShortMessages());
-    return Text(
-      timeago.format(this.creationDate, locale: 'fr_short') ?? '',
-      style: TextStyle(fontSize: 12.0),
-    );
+    if (this.creationDate != null) {
+      return Text(
+        timeago.format(this.creationDate, locale: 'fr_short') ?? '',
+        style: TextStyle(fontSize: 12.0),
+      );
+    } else {
+      return CircularProgressIndicator();
+    }
   }
 
   Widget showAuthorProfile(DatabaseService database) {
@@ -408,8 +412,8 @@ class Post {
     return database.updateReactionToPost(postID: this.id, reaction: reaction);
   }
 
-  Widget getCard(BuildContext context, DatabaseService database,
-      CurrentUser currentUser) {
+  Widget getCard(
+      BuildContext context, DatabaseService database, CurrentUser currentUser) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -588,30 +592,33 @@ class Event extends Post {
   Widget showEventDate() {
     timeago.setLocaleMessages('fr_short', timeago.FrShortMessages());
     DateFormat format = DateFormat('dd/MM à HH:mm');
-
-    return Padding(
-      padding: const EdgeInsets.only(left: Post.padding),
-      child: Row(
-        children: <Widget>[
-          Icon(
-            Icons.access_time,
-            color: Colors.blue.shade800,
-            size: 16.0,
-          ),
-          SizedBox(
-            width: Post.padding / 2,
-          ),
-          Text(
-            format.format(this.startDate) + ' - ' ?? '',
-            textAlign: TextAlign.center,
-          ),
-          Text(
-            format.format(this.endDate) ?? '',
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
+    if (this.startDate != null && this.endDate != null) {
+      return Padding(
+        padding: const EdgeInsets.only(left: Post.padding),
+        child: Row(
+          children: <Widget>[
+            Icon(
+              Icons.access_time,
+              color: Colors.blue.shade800,
+              size: 16.0,
+            ),
+            SizedBox(
+              width: Post.padding / 2,
+            ),
+            Text(
+              format.format(this.startDate) + ' - ' ?? '',
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              format.format(this.endDate) ?? '',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    } else {
+      return CircularProgressIndicator();
+    }
   }
 }
 
@@ -709,30 +716,33 @@ class Internship extends Post {
   Widget showInternshipDate() {
     timeago.setLocaleMessages('fr_short', timeago.FrShortMessages());
     DateFormat format = DateFormat('dd/MM à HH:mm');
-
-    return Padding(
-      padding: const EdgeInsets.only(left: Post.padding),
-      child: Row(
-        children: <Widget>[
-          Icon(
-            Icons.access_time,
-            color: Colors.blue.shade800,
-            size: 16.0,
-          ),
-          SizedBox(
-            width: Post.padding / 2,
-          ),
-          Text(
-            format.format(this.startDate) + ' - ' ?? '',
-            textAlign: TextAlign.center,
-          ),
-          Text(
-            format.format(this.endDate) ?? '',
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
+    if (this.startDate != null && this.endDate != null) {
+      return Padding(
+        padding: const EdgeInsets.only(left: Post.padding),
+        child: Row(
+          children: <Widget>[
+            Icon(
+              Icons.access_time,
+              color: Colors.blue.shade800,
+              size: 16.0,
+            ),
+            SizedBox(
+              width: Post.padding / 2,
+            ),
+            Text(
+              format.format(this.startDate) + ' - ' ?? '',
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              format.format(this.endDate) ?? '',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    } else {
+      return CircularProgressIndicator();
+    }
   }
 }
 // START all the widget layout for the getCard

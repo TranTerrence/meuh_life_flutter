@@ -198,7 +198,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
           }
           Profile profile = snapshot.data;
           return Padding(
-            padding: const EdgeInsets.only(left: 14.0),
+            padding: const EdgeInsets.only(left: 12.0),
             child: Text(
               profile.firstName,
               style: TextStyle(fontSize: 12.0),

@@ -143,9 +143,13 @@ class Comment {
 
   Widget showCreationDate() {
     timeago.setLocaleMessages('fr_short', timeago.FrShortMessages());
-    return Text(
-      timeago.format(this.creationDate, locale: 'fr_short') ?? '',
-      style: TextStyle(fontSize: 12.0),
-    );
+    if (this.creationDate != null) {
+      return Text(
+        timeago.format(this.creationDate, locale: 'fr_short') ?? '',
+        style: TextStyle(fontSize: 12.0),
+      );
+    } else {
+      return CircularProgressIndicator();
+    }
   }
 }
