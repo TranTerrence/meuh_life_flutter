@@ -3,30 +3,29 @@ const admin = require('firebase-admin')
 admin.initializeApp()
 
 const db = admin.firestore();
+const FieldValue = admin.firestore.FieldValue;
 
 exports.onCreateMessage = functions.firestore
   .document('chatRooms/{chatRoomID}/messages/{message}')
   .onCreate(async (snap, context) => {
     console.log('----------------start function--------------------');
 
-    const doc = snap.data();
-    console.log(doc);
+    const message = snap.data();
+    console.log(message);
 
-    const idFrom = doc.author;
+    const idFrom = message.author;
     const chatRoomID = context.params.chatRoomID;
-
-    const contentMessage = doc.content;
-    const msgDate = doc.creationDate;
-
 
     const chatRoom = (await db.doc('chatRooms/' + chatRoomID).get()).data();
     const userFrom = (await db.doc('users/' + idFrom).get()).data();
 
     // -Start--- Update last message chatRoom ---- Update the chatRoom lastMessage and date
-    db.doc('chatRooms/' + chatRoomID).update({ lastMessage: contentMessage, lastMessageDate: msgDate});
+    db.doc('chatRooms/' + chatRoomID).update({ lastMessage: message.content, lastMessageDate: message.creationDate});
     // -End--- Update last message chatRoom ---- Update the chatRoom lastMessage and date
 
-    // -Start---Send Notifications ---- Get all the users to send notifications
+    // -Start---Send Notifications ---- send notifications to all users
+
+    //Get all users
     let usersToPromises = [];
     for (var i = 0; i < chatRoom.users.length; i++) {
       const userID = chatRoom.users[i];
@@ -37,13 +36,19 @@ exports.onCreateMessage = functions.firestore
     }
     const usersToDocSnapshot = await Promise.all(usersToPromises);
 
-    //Send notifications to each users
+    //Sending the notifications
+    let authorName = userFrom.firstName;
+    if(message.asOrganisation){
+      const organisationID = message.organisationID;
+      const organisation = (await db.doc('organisations/' + organisationID).get()).data();
+      authorName = organisation.fullName;
+    }
     usersToDocSnapshot.forEach(userToDocSnap => {
       let userTo = userToDocSnap.data();
       const payload = {
         notification: {
-          title: `Tu as reçu un nouveau message de "${userFrom.firstName}"`,
-          body: contentMessage,
+          title: `Tu as reçu un nouveau message de "${authorName}"`,
+          body: message.content,
           badge: '1',
           sound: 'default'
         },
@@ -65,7 +70,6 @@ exports.onCreateMessage = functions.firestore
           console.log('Error sending message:', error)
         })
     });
-
     // -END---Send Notifications ----
 
   });

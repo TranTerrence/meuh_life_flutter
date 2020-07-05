@@ -311,7 +311,7 @@ class DatabaseService {
     //create the Organisation document, then create all members document, get the ID and put it into the orga document
 
     CollectionReference organisationCollection =
-    Firestore.instance.collection('organisations');
+        Firestore.instance.collection('organisations');
 
     DocumentReference orgRef = organisationCollection.document(organisation.id);
     CollectionReference memberCollection =
