@@ -61,23 +61,20 @@ class _MarketScreenState extends State<MarketScreen>
           body: TabBarView(
             children: tabContent,
           ),
-          floatingActionButton: ScaleTransition(
-            scale: _hideFabAnimation,
-            child: FloatingActionButton(
-              onPressed: () => {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          CreatePostScreen(userID: currentUser.id)),
-                ),
-              },
-              child: Icon(
-                Icons.add,
-                color: Colors.white,
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        CreatePostScreen(userID: currentUser.id)),
               ),
-              backgroundColor: Colors.blue.shade800,
+            },
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
             ),
+            backgroundColor: Colors.blue.shade800,
           ),
         ),
       ),

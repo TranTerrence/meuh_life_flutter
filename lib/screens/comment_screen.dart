@@ -74,13 +74,17 @@ class _CommentScreenState extends State<CommentScreen> {
           );
         } else {
           List<Comment> comments = snapshot.data;
-          comments.insert(
-              0,
-              Comment(
-                  text: widget.post.description,
-                  author: widget.post.author,
-                  asOrganisation: widget.post.asOrganisation,
-                  creationDate: widget.post.creationDate));
+          if (widget.post.description != null &&
+              widget.post.description != '') {
+            comments.insert(
+                0,
+                Comment(
+                    text: widget.post.description,
+                    author: widget.post.author,
+                    asOrganisation: widget.post.asOrganisation,
+                    creationDate: widget.post.creationDate));
+          }
+
           return ListView.builder(
             padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
             itemBuilder: (context, index) {

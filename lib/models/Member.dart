@@ -23,7 +23,7 @@ class Member {
   String userID = ''; // userID of the member
   String organisationID = 'Oganisation ID';
   String role = 'Member';
-  String state = 'Accepted'; // TODO : Manage this
+  String state = 'Accepted';
 
   String position = ''; // President, tresorier ,...
   String addedBy = '';

@@ -1,4 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:meuh_life/providers/CurrentUser.dart';
 import 'package:meuh_life/screens/connexion_screen.dart';
 import 'package:meuh_life/screens/home_screen.dart';
@@ -29,6 +35,9 @@ class RootScreen extends StatefulWidget {
 class _RootScreenState extends State<RootScreen> {
   AuthStatus authStatus = AuthStatus.NOT_DETERMINED;
   String _userId = "";
+  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
@@ -39,7 +48,7 @@ class _RootScreenState extends State<RootScreen> {
           _userId = user?.uid;
         }
         authStatus =
-            user?.uid == null ? AuthStatus.NOT_LOGGED_IN : AuthStatus.LOGGED_IN;
+        user?.uid == null ? AuthStatus.NOT_LOGGED_IN : AuthStatus.LOGGED_IN;
       });
     });
   }
@@ -87,6 +96,7 @@ class _RootScreenState extends State<RootScreen> {
         break;
       case AuthStatus.LOGGED_IN:
         if (_userId.length > 0 && _userId != null) {
+          registerNotification(_userId);
           return Provider(
             create: (context) => CurrentUser(
                 auth: widget.auth, id: _userId, logoutCallback: logoutCallback),
@@ -102,5 +112,61 @@ class _RootScreenState extends State<RootScreen> {
       default:
         return buildWaitingScreen();
     }
+  }
+
+  void registerNotification(String userID) {
+    firebaseMessaging.requestNotificationPermissions();
+
+    firebaseMessaging.configure(onMessage: (Map<String, dynamic> message) {
+      print('onMessage: $message');
+      Platform.isAndroid
+          ? showNotification(message['notification'])
+          : showNotification(message['aps']['alert']);
+      return;
+    }, onResume: (Map<String, dynamic> message) {
+      print('onResume: $message');
+      return;
+    }, onLaunch: (Map<String, dynamic> message) {
+      print('onLaunch: $message');
+      return;
+    });
+
+    firebaseMessaging.getToken().then((token) {
+      print('token: $token');
+      Firestore.instance
+          .collection('users')
+          .document(userID)
+          .updateData({'pushToken': token});
+    }).catchError((err) {
+      print(err.message.toString());
+      //Fluttertoast.showToast(msg: err.message.toString());
+    });
+  }
+
+  void showNotification(message) async {
+    var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+      Platform.isAndroid ?? 'com.terrence.meuhlife',
+      'Meuh Life',
+      'Canal des nouveaux post',
+      playSound: true,
+      enableVibration: true,
+      importance: Importance.Max,
+      priority: Priority.High,
+    );
+    var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+    var platformChannelSpecifics = new NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+
+    print(message);
+//    print(message['body'].toString());
+//    print(json.encode(message));
+
+    await flutterLocalNotificationsPlugin.show(0, message['title'].toString(),
+        message['body'].toString(), platformChannelSpecifics,
+        payload: json.encode(message));
+
+//    await flutterLocalNotificationsPlugin.show(
+//        0, 'plain title', 'plain body', platformChannelSpecifics,
+//        payload: 'item x');
   }
 }

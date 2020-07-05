@@ -440,7 +440,6 @@ class _CreateOrganisationScreenState extends State<CreateOrganisationScreen> {
                           ],
                         ),
                       ),
-                      //TODO: Show this icon only if allow
                       if (_members[index].role != 'Owner')
                         IconButton(
                           onPressed: () {

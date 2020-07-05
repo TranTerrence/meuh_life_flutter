@@ -6,6 +6,7 @@ import 'package:meuh_life/models/Organisation.dart';
 import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/screens/contacts_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 import 'conversation_screen.dart';
 import 'organisations_screen.dart';
@@ -199,10 +200,19 @@ class _MyChatsTabState extends State<MyChatsTab> {
                     ],
                   ),
                 ),
+                showTimeAgo(chatRoom.lastMessageDate)
               ],
             ),
           );
         });
+  }
+
+  Widget showTimeAgo(DateTime dateTime) {
+    timeago.setLocaleMessages('fr_short', timeago.FrShortMessages());
+    return Text(
+      timeago.format(dateTime, locale: 'fr_short') ?? '',
+      style: TextStyle(fontSize: 12.0),
+    );
   }
 
   Widget getOrganisationItem(ChatRoom chatRoom) {
@@ -253,6 +263,7 @@ class _MyChatsTabState extends State<MyChatsTab> {
                     ],
                   ),
                 ),
+                showTimeAgo(chatRoom.lastMessageDate),
               ],
             ),
           );

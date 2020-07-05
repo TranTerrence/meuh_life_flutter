@@ -25,6 +25,8 @@ dependencies:
   firebase_database: ^3.0.7
   firebase_storage: ^3.1.5
   firebase_image: ^0.1.5
+  firebase_messaging: ^6.0.16 #TODO Add messaging to iOS config
+  flutter_local_notifications: ^1.4.4+1
   cloud_firestore: ^0.13.5
   flutter_localizations:
     sdk: flutter
