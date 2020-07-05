@@ -175,7 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Icon(
-                  Icons.edit,
+                  Icons.add_photo_alternate,
                   size: iconSize,
                   color: Colors.blue.shade800,
                 ),

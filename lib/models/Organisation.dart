@@ -3,9 +3,14 @@ import 'package:firebase_image/firebase_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:meuh_life/components/RoundedDialog.dart';
+import 'package:meuh_life/models/ChatRoom.dart';
 import 'package:meuh_life/models/Member.dart';
+import 'package:meuh_life/providers/CurrentUser.dart';
+import 'package:meuh_life/screens/conversation_screen.dart';
 import 'package:meuh_life/screens/image_view_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
+import 'package:meuh_life/services/utils.dart';
+import 'package:provider/provider.dart';
 
 class Organisation {
   String id = '';
@@ -17,7 +22,6 @@ class Organisation {
   List<String> members = []; // List of members
   bool isVerified = false;
 
-  //TODO : Add field number of request
   Organisation();
 
   Organisation.fromDocSnapshot(DocumentSnapshot document) {
@@ -84,6 +88,7 @@ class Organisation {
   Future<void> showDetailedDialog(
       BuildContext context, Organisation organisation) async {
     DatabaseService database = DatabaseService();
+    CurrentUser currentUser = Provider.of<CurrentUser>(context, listen: false);
 
     return showDialog<void>(
       context: context,
@@ -156,14 +161,42 @@ class Organisation {
                   }),
               Align(
                 alignment: Alignment.bottomRight,
-                child: FlatButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); // To close the dialog
-                  },
-                  child: Text(
-                    'Fermer',
-                    style: TextStyle(color: Colors.blue.shade800),
-                  ),
+                child: Wrap(
+                  children: <Widget>[
+                    FlatButton(
+                      onPressed: () {
+                        print('Click talk with ..');
+                        String chatRoomID = getMixKey(this.id, currentUser.id);
+                        ChatRoom chatRoom = ChatRoom(
+                            id: chatRoomID,
+                            type: "SINGLE_ORGANISATION",
+                            users: [currentUser.id],
+                            organisations: [this.id]);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ConversationScreen(
+                                    chatRoom: chatRoom,
+                                    userID: currentUser.id,
+                                    toOrganisation: this,
+                                  )),
+                        ); // To close the dialog
+                      },
+                      child: Text(
+                        'Contacter',
+                        style: TextStyle(color: Colors.blue.shade800),
+                      ),
+                    ),
+                    FlatButton(
+                      onPressed: () {
+                        Navigator.of(context).pop(); // To close the dialog
+                      },
+                      child: Text(
+                        'Fermer',
+                        style: TextStyle(color: Colors.blue.shade800),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

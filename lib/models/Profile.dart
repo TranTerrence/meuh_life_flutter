@@ -4,9 +4,14 @@ import 'package:firebase_image/firebase_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:meuh_life/components/RoundedDialog.dart';
+import 'package:meuh_life/models/ChatRoom.dart';
 import 'package:meuh_life/models/Member.dart';
+import 'package:meuh_life/providers/CurrentUser.dart';
+import 'package:meuh_life/screens/conversation_screen.dart';
 import 'package:meuh_life/screens/image_view_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
+import 'package:meuh_life/services/utils.dart';
+import 'package:provider/provider.dart';
 
 class Profile {
   String id = '';
@@ -234,6 +239,8 @@ class Profile {
 
   Future<void> showDetailedDialog(BuildContext context) async {
     DatabaseService database = DatabaseService();
+    CurrentUser currentUser = Provider.of<CurrentUser>(context, listen: false);
+
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -321,18 +328,23 @@ class Profile {
                     FlatButton(
                       onPressed: () {
                         print('Click talk with ..');
-//                        Navigator.push(
-//                          context,
-//                          MaterialPageRoute(
-//                              builder: (context) => ConversationScreen(
-//                                    chatRoom: chatRoom,
-//                                    userID: widget.userID,
-//                                    toProfile: this,
-//                                  )),
-//                        ); // To close the dialog
+                        String chatRoomID = getMixKey(this.id, currentUser.id);
+                        ChatRoom chatRoom = ChatRoom(
+                            id: chatRoomID,
+                            type: "SINGLE_USER",
+                            users: [this.id, currentUser.id]);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => ConversationScreen(
+                                    chatRoom: chatRoom,
+                                    userID: currentUser.id,
+                                    toProfile: this,
+                                  )),
+                        ); // To close the dialog
                       },
                       child: Text(
-                        'Envoyer un message',
+                        'Contacter',
                         style: TextStyle(color: Colors.blue.shade800),
                       ),
                     ),

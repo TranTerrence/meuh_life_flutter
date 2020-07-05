@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:meuh_life/components/MeuhLifeLogo.dart';
 import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/services/authentication.dart';
 import 'package:meuh_life/services/utils.dart';
@@ -207,23 +208,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
   }
 
   Widget showLogo() {
-    return Column(
-      children: <Widget>[
-        Image.asset(
-          'images/logo.png',
-          width: 200,
-        ),
-        Text(
-          'Meuh Life',
-          style: TextStyle(
-            color: Colors.blue.shade800,
-            fontFamily: 'Marker',
-            fontWeight: FontWeight.bold,
-            fontSize: 30,
-          ),
-        ),
-      ],
-    );
+    return MeuhLifeLogo();
   }
 
   Widget showFullNameInput() {
@@ -457,7 +442,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
                   TextFormField(
                     initialValue: '',
                     onChanged: (String newValue) =>
-                    fullName = newValue.replaceAll(' ', ''),
+                        fullName = newValue.replaceAll(' ', ''),
                     decoration: new InputDecoration(
                       border: new OutlineInputBorder(
                           borderSide:

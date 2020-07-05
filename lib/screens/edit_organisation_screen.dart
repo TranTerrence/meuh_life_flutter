@@ -435,7 +435,7 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                             DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 disabledHint:
-                                Text(Member.roles[_members[index].role]),
+                                    Text(Member.roles[_members[index].role]),
                                 value: _members[index].role,
                                 icon: Icon(Icons.arrow_drop_down),
                                 onChanged: (String newValue) {

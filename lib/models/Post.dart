@@ -388,17 +388,15 @@ class Post {
               Icons.edit,
               color: Colors.grey,
             ),
-            onPressed: () =>
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        EditPostScreen(
-                          post: this,
-                          currentUser: currentUser,
-                        ),
-                  ),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditPostScreen(
+                  post: this,
+                  currentUser: currentUser,
                 ),
+              ),
+            ),
           )
       ],
     );

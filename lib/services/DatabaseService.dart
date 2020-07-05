@@ -306,8 +306,8 @@ class DatabaseService {
     await orgRef.setData(organisation.toJson());
   }
 
-  void updateOrganisationAndMembers(Organisation organisation,
-      List<Member> members, File imageFile) async {
+  void updateOrganisationAndMembers(
+      Organisation organisation, List<Member> members, File imageFile) async {
     //create the Organisation document, then create all members document, get the ID and put it into the orga document
 
     CollectionReference organisationCollection =
