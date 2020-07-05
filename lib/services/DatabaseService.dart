@@ -315,7 +315,7 @@ class DatabaseService {
 
     DocumentReference orgRef = organisationCollection.document(organisation.id);
     CollectionReference memberCollection =
-    Firestore.instance.collection('members');
+        Firestore.instance.collection('members');
     organisation.members = []; // Reinitialise the members
     await Future.forEach(members, (Member member) async {
       String mixKeyMember = getMixKey(organisation.id, member.userID);
@@ -354,7 +354,7 @@ class DatabaseService {
   Future<List<Member>> getMemberList({String on, String onValueEqualTo}) async {
     List<Member> memberList = [];
     CollectionReference memberCollection =
-    Firestore.instance.collection('members');
+        Firestore.instance.collection('members');
     QuerySnapshot querySnapshot = await memberCollection
         .where(on, isEqualTo: onValueEqualTo)
         .getDocuments();
@@ -370,7 +370,7 @@ class DatabaseService {
     List<Organisation> organisationList = [];
 
     CollectionReference memberCollection =
-    Firestore.instance.collection('members');
+        Firestore.instance.collection('members');
     QuerySnapshot querySnapshot = await memberCollection
         .where('userID', isEqualTo: userID)
         .getDocuments();
@@ -394,7 +394,7 @@ class DatabaseService {
   //Will create a member and also update the organisation to put the member within it
   void createMember(Member member) async {
     CollectionReference memberCollection =
-    Firestore.instance.collection('members');
+        Firestore.instance.collection('members');
     String mixKeyMember = getMixKey(member.organisationID, member.userID);
     DocumentReference memberRef = await memberCollection.document(mixKeyMember);
     memberRef.setData(member.toJson());
@@ -402,9 +402,9 @@ class DatabaseService {
     //Only add a reference in the Organisation if it has been acepted
     if (member.state == 'Accepted') {
       CollectionReference organisationCollection =
-      Firestore.instance.collection('organisations');
+          Firestore.instance.collection('organisations');
       DocumentReference orgRef =
-      organisationCollection.document(member.organisationID);
+          organisationCollection.document(member.organisationID);
 
       orgRef.updateData({
         "members": FieldValue.arrayUnion([memberRef.documentID])
@@ -414,7 +414,7 @@ class DatabaseService {
 
   void updateMember(Member member) async {
     CollectionReference memberCollection =
-    Firestore.instance.collection('members');
+        Firestore.instance.collection('members');
     String mixKeyMember = getMixKey(member.organisationID, member.userID);
     DocumentReference memberRef = await memberCollection.document(mixKeyMember);
     memberRef.updateData(member.toJson());
@@ -422,9 +422,9 @@ class DatabaseService {
     //TODO: Is the folowing necessary ? should we put it only when the state is accepted ?
     //if(member.state == 'Accepted')
     CollectionReference organisationCollection =
-    Firestore.instance.collection('organisations');
+        Firestore.instance.collection('organisations');
     DocumentReference orgRef =
-    organisationCollection.document(member.organisationID);
+        organisationCollection.document(member.organisationID);
 
     orgRef.updateData({
       "members": FieldValue.arrayUnion([memberRef.documentID])
@@ -433,7 +433,7 @@ class DatabaseService {
 
   void deleteMember(String memberID) async {
     CollectionReference memberCollection =
-    Firestore.instance.collection('members');
+        Firestore.instance.collection('members');
     DocumentReference memberRef = memberCollection.document(memberID);
     memberRef.delete();
   }
@@ -443,7 +443,7 @@ class DatabaseService {
   Stream<List<ChatRoom>> getChatRoomListStream(
       {String orderBy = 'lastMessageDate', @required String userID}) {
     CollectionReference chatRoomCollection =
-    Firestore.instance.collection('chatRooms');
+        Firestore.instance.collection('chatRooms');
     return chatRoomCollection
         .orderBy(orderBy, descending: true)
         .where('users', arrayContains: userID)
@@ -454,7 +454,7 @@ class DatabaseService {
   Stream<List<ChatRoom>> getOrganisationChatRoomListStream(
       {String orderBy = 'lastMessageDate', @required String organisationID}) {
     CollectionReference chatRoomCollection =
-    Firestore.instance.collection('chatRooms');
+        Firestore.instance.collection('chatRooms');
     return chatRoomCollection
         .orderBy(orderBy, descending: true)
         .where('organisations', arrayContains: organisationID)
@@ -464,9 +464,9 @@ class DatabaseService {
 
   Future<List<ChatRoom>> getOrganisationChatRoomList(
       {String orderBy = 'lastMessageDate',
-        @required String organisationID}) async {
+      @required String organisationID}) async {
     CollectionReference chatRoomCollection =
-    Firestore.instance.collection('chatRooms');
+        Firestore.instance.collection('chatRooms');
     List<ChatRoom> chatRoomList = [];
 
     QuerySnapshot querySnapshot = await chatRoomCollection
@@ -490,7 +490,7 @@ class DatabaseService {
   Stream<List<Message>> getMessageListStream(
       {String orderBy = 'creationDate', @required String chatRoomID}) {
     CollectionReference messageCollection =
-    Firestore.instance.collection('chatRooms/$chatRoomID/messages');
+        Firestore.instance.collection('chatRooms/$chatRoomID/messages');
     return messageCollection
         .orderBy(orderBy, descending: true)
         .snapshots()
@@ -520,7 +520,7 @@ class DatabaseService {
 
   void createChatRoom(ChatRoom chatRoom) async {
     CollectionReference messageCollection =
-    Firestore.instance.collection('chatRooms');
+        Firestore.instance.collection('chatRooms');
     if (chatRoom.id != null && chatRoom.id != '') {
       DocumentReference document = messageCollection.document(chatRoom.id);
       await document.setData(chatRoom.toJson());

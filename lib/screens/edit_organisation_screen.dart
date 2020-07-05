@@ -447,8 +447,8 @@ class _EditOrganisationScreenState extends State<EditOrganisationScreen> {
                                         !isCurrentUser &&
                                         (_members[index].role != 'Owner')
                                     ? createDropdownMenuItemList(isAdmin
-                                    ? rolesWithoutOwner
-                                    : Member.roles)
+                                        ? rolesWithoutOwner
+                                        : Member.roles)
                                     : null,
                               ),
                             ),
