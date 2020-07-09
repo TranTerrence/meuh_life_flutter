@@ -23,6 +23,11 @@ saveUserIDToHive(userID) async {
   await preferences.setUserID(userID);
 }
 
+/// First screen of the App
+///
+/// Check if the user is already logged in or not
+/// will show Home Screen or the Connexion screen
+///
 class RootScreen extends StatefulWidget {
   RootScreen({this.auth});
 
@@ -122,6 +127,34 @@ class _RootScreenState extends State<RootScreen> {
       Platform.isAndroid
           ? showNotification(message['notification'])
           : showNotification(message['aps']['alert']);
+//      //Test to get the notification to open the Conversation Screen, but doen't work, can delete this code
+//      if (authStatus == AuthStatus.LOGGED_IN) {
+//        ChatRoom chatRoom =
+//            ChatRoom.fromMap(message['chatRoom'], message['chatRoom'].id);
+//        var convProps = {
+//          chatRoom: chatRoom,
+//          userID: userID,
+//        };
+//        switch (message['chatRoom'].type) {
+//          case "SINGLE_USER":
+//            convProps.addAll({"toProfile": message['chatRoom'].users[0]});
+//            break;
+//
+//          case "SINGLE_ORGANISATION":
+//            convProps.addAll(
+//                {"toOrganisation": message['chatRoom'].organisations[0]});
+//            break;
+//        }
+//        Navigator.push(
+//          context,
+//          MaterialPageRoute(
+//              builder: (context) => ConversationScreen(
+//                    userID: userID,
+//                    chatRoom: chatRoom,
+//                  )),
+//        );
+//      }
+
       return;
     }, onResume: (Map<String, dynamic> message) {
       print('onResume: $message');
