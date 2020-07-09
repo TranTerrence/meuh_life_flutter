@@ -122,7 +122,7 @@ class _MarketScreenState extends State<MarketScreen>
       stream: _selectedFilter == 'ALL'
           ? database.getPostListStream()
           : database.getPostListStream(
-          on: 'type', onValueEqualTo: _selectedFilter),
+              on: 'type', onValueEqualTo: _selectedFilter),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(
