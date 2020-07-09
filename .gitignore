@@ -38,6 +38,7 @@ lib/generated_plugin_registrant.dart
 
 # Protected files
 **/google-services.json
+**/GoogleService-Info.plist
 
 #Gradle
 .gradle

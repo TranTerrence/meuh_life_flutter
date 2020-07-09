@@ -26,6 +26,20 @@ If you have Android Studio: Follow this video to learn [how to clone the project
 Execute the `pub get` command to download the packages from `pubspec.yaml`.
 Then follow the [Section 4 of the tutorial](https://www.appbrewery.co/courses/851555/lectures/15448509) to run the code on your device or on an emulator.
 
+#### 4.1 - Run on iOS
+References: 
+* [https://flutter.dev/docs/get-started/install/macos](https://flutter.dev/docs/get-started/install/macos)
+* [https://firebase.google.com/docs/flutter/setup](https://firebase.google.com/docs/flutter/setup)
+
+Download GoogleService-Info.plist from Firebase, and add it to your project through XCode.  
+ (It must be done through XCode, otherwise it won't compile: [https://github.com/flutter/flutter/issues/16871](https://github.com/flutter/flutter/issues/16871)).
+ 
+ You should then be good to go, just launch the emulator and run the following command:
+ 
+ ```bash
+ flutter run
+ ```
+
 ## Structure of the files
 |FIle |Description|
 |---|---|
