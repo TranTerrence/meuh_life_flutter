@@ -2,7 +2,6 @@ import 'package:meuh_life/services/authentication.dart';
 
 //Class use for the provider
 class CurrentUser {
-  //                                               <--- MyModel
   String id = '';
   BaseAuth auth;
   Function logoutCallback;

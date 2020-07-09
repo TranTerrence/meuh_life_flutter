@@ -28,6 +28,8 @@ class _SelectPublisherState extends State<SelectPublisher> {
             );
           } else {
             List<DropdownMenuItem<String>> list = snapshot.data;
+            print('Dropdown $list');
+
             //Get each organisation for each membership
             return Container(
               decoration: new BoxDecoration(
@@ -89,6 +91,7 @@ class _SelectPublisherState extends State<SelectPublisher> {
             Text(profile.fullName),
           ],
         )));
+
     return list;
   }
 }

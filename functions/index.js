@@ -47,16 +47,14 @@ exports.onCreateMessage = functions.firestore
       let userTo = userToDocSnap.data();
       const payload = {
         notification: {
-          title: `Tu as reçu un nouveau message de "${authorName}"`,
-          body: message.content,
+          title: 'Tu as reçu un nouveau message',
+          body: authorName + ': ' + message.content,
           badge: '1',
           sound: 'default'
         },
         data: {
           "click_action": "FLUTTER_NOTIFICATION_CLICK",
-          "sound": "default",
-          "status": "done",
-          "screen": "screenA", //TODO: Put the screen to open
+          "chatRoom": JSON.stringify(chatRoom) //TODO: Put the screen to open
         },
       }
       // Let push to the target device

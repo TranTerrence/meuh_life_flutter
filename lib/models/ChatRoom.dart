@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatRoom {
-  String id; //If not a groupchat, then use the concat of the 2 userID
+  String
+      id; //If not a groupchat, then use the concat of the 2 userID or USerid + orgaID
   String roomName; // null if !isChatGroup in the DB
   String lastMessage;
   String imageURL; // null if !isChatGroup in the DB
@@ -46,8 +47,6 @@ class ChatRoom {
   }
 
   ChatRoom.fromDocSnapshot(DocumentSnapshot document) {
-    //TODO: THERE IS A BUG HERE
-    print(document.data.toString());
     id = document.documentID;
     roomName = document['roomName'];
     type = document['type'];
