@@ -19,8 +19,14 @@ class ContactsScreen extends StatefulWidget {
 
 class _ContactsScreenState extends State<ContactsScreen> {
   String _subTitle = '';
-  List<Profile> _profiles;
+  Future<List<Profile>> _profiles;
   DatabaseService _database = DatabaseService();
+
+  @override
+  void initState() {
+    super.initState();
+    _profiles = _database.getProfileList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,27 +49,19 @@ class _ContactsScreenState extends State<ContactsScreen> {
     );
   }
 
-  Future<List<Profile>> getProfiles() async {
-    List<Profile> profiles = await _database.getProfileList();
-    setState(() {
-      _profiles = profiles;
-      _subTitle = '${_profiles.length} contacts';
-    });
-    return profiles;
-  }
 
   Widget showContactList() {
     return FutureBuilder(
-      future: getProfiles(),
+      future: _profiles,
       builder: (context, AsyncSnapshot<List<Profile>> snapshot) {
         if (!snapshot.hasData) {
           return Center(child: CircularProgressIndicator());
         }
-        _profiles = snapshot.data;
+        List<Profile> profiles = snapshot.data;
         return ListView.builder(
-            itemCount: _profiles.length,
+            itemCount: profiles.length,
             itemBuilder: (BuildContext context, int index) {
-              Profile profile = _profiles[index];
+              Profile profile = profiles[index];
 
               return Padding(
                 padding: const EdgeInsets.all(8.0),
