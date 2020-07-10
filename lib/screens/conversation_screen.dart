@@ -58,7 +58,9 @@ class _ConversationScreenState extends State<ConversationScreen> {
       switch (widget.chatRoom.type) {
         case 'SINGLE_USER':
           if (widget.toProfile != null) {
-            _toAvatar = widget.toProfile.getCircleAvatar(radius: _avatarRadius);
+            _toAvatar = InkWell(
+                onTap: () => widget.toProfile.showDetailedDialog(context),
+                child: widget.toProfile.getCircleAvatar(radius: _avatarRadius));
             _title = widget.toProfile.fullName;
           }
           break;
@@ -66,14 +68,20 @@ class _ConversationScreenState extends State<ConversationScreen> {
         case 'SINGLE_ORGANISATION':
           if (widget.asOrganisation != null && widget.asOrganisation != '') {
             if (widget.toProfile != null) {
-              _toAvatar =
-                  widget.toProfile.getCircleAvatar(radius: _avatarRadius);
+              _toAvatar = InkWell(
+                  onTap: () => widget.toProfile.showDetailedDialog(context),
+                  child:
+                      widget.toProfile.getCircleAvatar(radius: _avatarRadius));
               _title = widget.toProfile.fullName;
             }
             print('I am  As organisation: ${widget.asOrganisation}');
           } else if (widget.toOrganisation.id != null) {
-            _toAvatar =
-                widget.toOrganisation.getCircleAvatar(radius: _avatarRadius);
+            _toAvatar = InkWell(
+                onTap: () =>
+                    widget.toOrganisation
+                        .showDetailedDialog(context, widget.toOrganisation),
+                child: widget.toOrganisation
+                    .getCircleAvatar(radius: _avatarRadius));
             _title = widget.toOrganisation.fullName;
             print('I am  orga: ${widget.toOrganisation.id}');
           }
