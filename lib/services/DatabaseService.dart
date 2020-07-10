@@ -300,7 +300,7 @@ class DatabaseService {
       String collection = 'organisations_images';
       String fileName = organisationID;
       organisation.imageURL = getFileURL(collection, fileName);
-      this.uploadFile(imageFile, collection, fileName);
+      await this.uploadFile(imageFile, collection, fileName).onComplete;
     }
     organisation.creatorID = currentUserID;
     await orgRef.setData(organisation.toJson());
@@ -328,7 +328,9 @@ class DatabaseService {
       String collection = 'organisations_images';
       String fileName = organisation.id;
       organisation.imageURL = getFileURL(collection, fileName);
-      this.uploadFile(imageFile, collection, fileName);
+      await this
+          .uploadFile(imageFile, collection, fileName)
+          .onComplete;
     }
     //Remove duplicates members
     organisation.members = organisation.members.toSet().toList();
@@ -543,7 +545,9 @@ class DatabaseService {
       String collection = 'messages_images/$chatRoomID';
       String fileName = msgID;
       message.imageURL = getFileURL(collection, fileName);
-      this.uploadFile(imageFile, collection, fileName);
+      await this
+          .uploadFile(imageFile, collection, fileName)
+          .onComplete;
     }
     await msgRef.setData(message.toJson());
   }

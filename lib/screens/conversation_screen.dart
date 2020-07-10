@@ -77,9 +77,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
             print('I am  As organisation: ${widget.asOrganisation}');
           } else if (widget.toOrganisation.id != null) {
             _toAvatar = InkWell(
-                onTap: () =>
-                    widget.toOrganisation
-                        .showDetailedDialog(context, widget.toOrganisation),
+                onTap: () => widget.toOrganisation
+                    .showDetailedDialog(context, widget.toOrganisation),
                 child: widget.toOrganisation
                     .getCircleAvatar(radius: _avatarRadius));
             _title = widget.toOrganisation.fullName;
