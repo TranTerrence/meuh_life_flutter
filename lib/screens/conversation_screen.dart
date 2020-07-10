@@ -171,8 +171,20 @@ class _ConversationScreenState extends State<ConversationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       if (message.type == 'IMAGE')
-                        Image(
-                          image: FirebaseImage(message.imageURL),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ImageViewScreen(imageURL: message.imageURL),
+                              ),
+                            );
+                          },
+                          child: Image(
+                            image: FirebaseImage(message.imageURL),
+                            width: 200,
+                          ),
                         ),
                       Text(
                         message.content,
@@ -187,24 +199,6 @@ class _ConversationScreenState extends State<ConversationScreen> {
         ],
       ),
     );
-  }
-
-  Widget getAuthorProfile(String authorID) {
-    return FutureBuilder(
-        future: _database.getProfile(authorID),
-        builder: (context, AsyncSnapshot<Profile> snapshot) {
-          if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
-          }
-          Profile profile = snapshot.data;
-          return Padding(
-            padding: const EdgeInsets.only(left: 12.0),
-            child: Text(
-              profile.firstName,
-              style: TextStyle(fontSize: 12.0),
-            ),
-          );
-        });
   }
 
   Widget buildRightItem(Message message, bool isLastMessageRight) {
@@ -252,6 +246,24 @@ class _ConversationScreenState extends State<ConversationScreen> {
         ],
       ),
     );
+  }
+
+  Widget getAuthorProfile(String authorID) {
+    return FutureBuilder(
+        future: _database.getProfile(authorID),
+        builder: (context, AsyncSnapshot<Profile> snapshot) {
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+          Profile profile = snapshot.data;
+          return Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: Text(
+              profile.firstName,
+              style: TextStyle(fontSize: 12.0),
+            ),
+          );
+        });
   }
 
   Widget showInput() {

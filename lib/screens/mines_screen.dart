@@ -129,7 +129,8 @@ class _MarketScreenState extends State<MarketScreen>
             child: CircularProgressIndicator(),
           );
         } else {
-          List<Post> posts = snapshot.data;
+          List<Post> posts = snapshot
+              .data; //TODO: Maybe filter the data here instead of calling each time
           return ListView.builder(
             key: PageStorageKey(key),
             padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
