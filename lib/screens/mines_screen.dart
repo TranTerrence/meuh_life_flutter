@@ -48,7 +48,7 @@ class _MarketScreenState extends State<MarketScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: NestedScrollView(
-        key: PageStorageKey('POST_LISTVIEW'),
+        key: PageStorageKey('nested-scroll-$_selectedFilter'),
         controller: _scrollController,
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return <Widget>[
@@ -132,7 +132,7 @@ class _MarketScreenState extends State<MarketScreen>
           List<Post> posts = snapshot
               .data; //TODO: Maybe filter the data here instead of calling each time
           return ListView.builder(
-            key: PageStorageKey(key),
+            key: PageStorageKey('list-view-$key'),
             padding: EdgeInsets.only(top: 10.0, bottom: 10.0),
             itemBuilder: (context, index) {
               Post post = posts[index];

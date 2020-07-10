@@ -328,9 +328,7 @@ class DatabaseService {
       String collection = 'organisations_images';
       String fileName = organisation.id;
       organisation.imageURL = getFileURL(collection, fileName);
-      await this
-          .uploadFile(imageFile, collection, fileName)
-          .onComplete;
+      await this.uploadFile(imageFile, collection, fileName).onComplete;
     }
     //Remove duplicates members
     organisation.members = organisation.members.toSet().toList();
