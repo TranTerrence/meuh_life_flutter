@@ -77,8 +77,8 @@ class Comment {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              RichText(
-                text: new TextSpan(
+              SelectableText.rich(
+                TextSpan(
                   style: new TextStyle(
                     fontSize: 14.0,
                     color: Colors.black,

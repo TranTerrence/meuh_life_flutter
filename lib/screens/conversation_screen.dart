@@ -193,7 +193,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                             width: 200,
                           ),
                         ),
-                      Text(
+                      SelectableText(
                         message.content,
                       ),
                     ],
@@ -239,7 +239,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
                             width: 200,
                           ),
                         ),
-                      Text(
+                      SelectableText(
                         message.content,
                         style: TextStyle(color: Colors.white),
                       ),

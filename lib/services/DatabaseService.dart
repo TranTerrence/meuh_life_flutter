@@ -543,9 +543,7 @@ class DatabaseService {
       String collection = 'messages_images/$chatRoomID';
       String fileName = msgID;
       message.imageURL = getFileURL(collection, fileName);
-      await this
-          .uploadFile(imageFile, collection, fileName)
-          .onComplete;
+      await this.uploadFile(imageFile, collection, fileName).onComplete;
     }
     await msgRef.setData(message.toJson());
   }

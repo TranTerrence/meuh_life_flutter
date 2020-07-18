@@ -188,7 +188,6 @@ class _OrganisationChatsTabState extends State<OrganisationChatsTab> {
 
     Organisation organisation = _organisations[toOrganisationID];
     double avatarRadius = 18.0;
-    print('BUILDING ITME');
     return FutureBuilder(
         future: _database.getProfile(toUserID),
         builder: (context, AsyncSnapshot<Profile> snapshot) {

@@ -184,10 +184,8 @@ class Post {
   Widget showTitle() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(padding, 0, padding, 0),
-      child: Text(
+      child: SelectableText(
         this.title,
-        //maxLines: 3,
-        overflow: TextOverflow.ellipsis,
         style: TextStyle(fontSize: 18.0),
       ),
     );
@@ -197,9 +195,9 @@ class Post {
     if (this.description != null && this.description != '') {
       return Padding(
         padding: const EdgeInsets.fromLTRB(padding, 0, padding, 0),
-        child: Text(
+        child: SelectableText(
           this.description,
-          softWrap: true,
+          //softWrap: true,
           //maxLines: 5,
           //overflow: TextOverflow.ellipsis,
           style: TextStyle(fontSize: 14.0),
@@ -494,17 +492,17 @@ class Event extends Post {
     int commentCount,
     DateTime creationDate,
   }) : super(
-    id: id,
-    title: title,
-    description: description,
-    author: author,
-    imageURL: imageURL,
-    asOrganisation: asOrganisation,
-    type: type,
-    creationDate: creationDate,
-    reactionCount: reactionCount,
-    commentCount: commentCount,
-  );
+          id: id,
+          title: title,
+          description: description,
+          author: author,
+          imageURL: imageURL,
+          asOrganisation: asOrganisation,
+          type: type,
+          creationDate: creationDate,
+          reactionCount: reactionCount,
+          commentCount: commentCount,
+        );
 
   Map<String, dynamic> toJson() {
     return {
