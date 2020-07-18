@@ -20,8 +20,8 @@ dependencies:
   hive_flutter: ^0.3.0+2 # only mobile
   timeago: ^2.0.26
   like_button: ^0.2.0
-  image_picker: ^0.6.6+1 # TODO: Add image picker to iOS  # only mobile
-  firebase_auth: ^0.14.0+5 # TODO Add firebase to iOS config
+  image_picker: ^0.6.6+1
+  firebase_auth: ^0.14.0+5
   firebase_database: ^3.0.7
   firebase_storage: ^3.1.5
   firebase_image: ^0.1.5
