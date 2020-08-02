@@ -49,17 +49,15 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
     });
     if (validateAndSave()) {
       String userId = "";
-      var splitFullName = _fullName.split(".");
-      String _firstName = splitFullName[0];
-      String _lastName = splitFullName[1];
+      var email = _fullName.toLowerCase() + '@mines-paristech.fr';
 
       Profile profile = new Profile(
-          firstName: _firstName,
-          lastName: _lastName,
+          email: email,
           promo: _promo,
           gapYear: _gapYear,
           isPAM: _isPAM,
-          type: _type);
+          type: _type,
+      );
       print('LOGGING');
 
       try {
@@ -220,7 +218,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
           keyboardType: TextInputType.text,
           autofocus: false,
           inputFormatters: [
-            new BlacklistingTextInputFormatter(new RegExp('[ -]'))
+            new WhitelistingTextInputFormatter(new RegExp("[-a-zA-Z._]")),
           ],
           decoration: new InputDecoration(
               border: new OutlineInputBorder(
@@ -230,9 +228,7 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
                 Icons.mail,
                 color: Colors.blue.shade800,
               )),
-          validator: (value) => value.split('.').length != 2
-              ? 'doit être de la forme prénom.nom'
-              : null,
+          validator: validateFullNameInput,
           onSaved: (value) => _fullName = value.trim(),
         ),
         Padding(
@@ -245,6 +241,15 @@ class _ConnexionScreenState extends State<ConnexionScreen> {
         ),
       ],
     );
+  }
+
+  String validateFullNameInput(String fullName) {
+    if (fullName.split('.').length != 2) return 'doit être de la forme prénom.nom';
+    RegExp validatorRegexp = new RegExp("[-a-zA-Z_]+\.[-a-zA-Z_]+");
+    if (!validatorRegexp.hasMatch(fullName)) {
+      return 'Ne peut contenir que des lettres, des tirets et des undescores';
+    }
+    return null;
   }
 
   Widget showPromoInput() {
