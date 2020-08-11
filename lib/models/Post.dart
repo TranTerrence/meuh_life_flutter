@@ -515,8 +515,8 @@ class Event extends Post {
   }
 
   @override
-  Widget getCard(BuildContext context, DatabaseService database,
-      CurrentUser currentUser) {
+  Widget getCard(
+      BuildContext context, DatabaseService database, CurrentUser currentUser) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -640,17 +640,17 @@ class Internship extends Post {
     int commentCount,
     DateTime creationDate,
   }) : super(
-    id: id,
-    title: title,
-    description: description,
-    author: author,
-    imageURL: imageURL,
-    asOrganisation: asOrganisation,
-    type: type,
-    creationDate: creationDate,
-    reactionCount: reactionCount,
-    commentCount: commentCount,
-  );
+          id: id,
+          title: title,
+          description: description,
+          author: author,
+          imageURL: imageURL,
+          asOrganisation: asOrganisation,
+          type: type,
+          creationDate: creationDate,
+          reactionCount: reactionCount,
+          commentCount: commentCount,
+        );
 
   Map<String, dynamic> toJson() {
     return {
@@ -662,8 +662,8 @@ class Internship extends Post {
   }
 
   @override
-  Widget getCard(BuildContext context, DatabaseService database,
-      CurrentUser currentUser) {
+  Widget getCard(
+      BuildContext context, DatabaseService database, CurrentUser currentUser) {
     return Card(
       child: Column(
         mainAxisSize: MainAxisSize.min,

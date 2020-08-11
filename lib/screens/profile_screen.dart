@@ -14,6 +14,7 @@ import 'package:meuh_life/models/Profile.dart';
 import 'package:meuh_life/providers/CurrentUser.dart';
 import 'package:meuh_life/screens/create_organisation_screen.dart';
 import 'package:meuh_life/screens/edit_organisation_screen.dart';
+import 'package:meuh_life/screens/edit_profile_screen.dart';
 import 'package:meuh_life/screens/join_organisation_screen.dart';
 import 'package:meuh_life/services/DatabaseService.dart';
 import 'package:provider/provider.dart';
@@ -56,6 +57,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     _profile.fullName,
                     style: TextStyle(fontSize: 30, fontFamily: 'Marker'),
+                  ),
+                  OutlineButton.icon(
+                    icon: Icon(
+                      Icons.edit,
+                      color: Colors.blue.shade800,
+                    ),
+                    color: Colors.blue.shade800,
+                    label: Text('Modifier le profil'),
+                    onPressed: () => {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => EditProfileScreen(
+                                  currentUser: currentUser,
+                                  profile: _profile,
+                                )),
+                      ),
+                    },
                   ),
                   Card(
                     child: Container(
@@ -108,13 +127,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
                           ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.edit,
-                              color: Colors.blue.shade800,
-                            ),
-                            onPressed: () => _showEditDescription(),
-                          ),
                         ],
                       ),
                     ),
@@ -124,14 +136,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     alignment: MainAxisAlignment.spaceEvenly,
                     mainAxisSize: MainAxisSize.max,
                     children: <Widget>[
-                      RaisedButton(
-                        padding: EdgeInsets.all(12.0),
-                        shape: new RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(30.0)),
-                        color: Colors.blue.shade800,
-                        child: new Text('Paramétres'),
-                        onPressed: () => print('Click Parametres'),
-                      ),
                       RaisedButton(
                         padding: EdgeInsets.all(12.0),
                         shape: new RoundedRectangleBorder(
@@ -253,14 +257,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(_profile.gapYear ? 'Oui' : 'Non'),
                 ],
               ),
-              SizedBox(
-                height: 16.0,
-                child: Checkbox(
-                    activeColor: Colors.blue.shade800,
-                    value: _profile.gapYear,
-                    onChanged: (bool value) => database
-                        .updateProfile(currentUser.id, {"gapYear": value})),
-              ),
             ],
           ),
         ),
@@ -285,14 +281,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   Text(_profile.isPAM ? 'Oui' : 'Non'),
                 ],
-              ),
-              SizedBox(
-                height: 16.0,
-                child: Checkbox(
-                    activeColor: Colors.blue.shade800,
-                    value: _profile.isPAM,
-                    onChanged: (bool value) => database
-                        .updateProfile(currentUser.id, {"isPAM": value})),
               ),
             ],
           ),
@@ -366,74 +354,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                  ),
-                ),
-              ],
-            ),
-          );
-        });
-  }
-
-  Future<void> _showEditDescription() {
-    final textInputController =
-        TextEditingController(text: _profile.description);
-
-    return showDialog<void>(
-        context: context,
-        builder: (BuildContext context) {
-          return RoundedDialog(
-            noAvatar: true,
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  'Modifier la description',
-                  style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: TextField(
-                    minLines: 2,
-                    maxLines: 5,
-                    cursorColor: Colors.blue.shade800,
-                    controller: textInputController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      helperText: "Présente toi",
-                      labelText: 'Description',
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: ButtonBar(
-                    children: <Widget>[
-                      FlatButton(
-                        child: Text(
-                          'Annuler',
-                          style: TextStyle(color: Colors.blue.shade800),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                      FlatButton(
-                        child: Text(
-                          'Sauvegarder',
-                          style: TextStyle(color: Colors.blue.shade800),
-                        ),
-                        onPressed: () {
-                          //Avoid writing to the DB if it's not necessary
-                          if (textInputController.text !=
-                              _profile.description) {
-                            database.updateProfile(currentUser.id,
-                                {"description": textInputController.text});
-                          }
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
                   ),
                 ),
               ],
