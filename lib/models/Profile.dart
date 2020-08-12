@@ -76,9 +76,25 @@ class Profile {
     this.type = document['type'];
   }
 
+  Profile.fromJSON(Map map) {
+    this.id = map['id'];
+    this.email = map['email'];
+    this.promo = map['promo'];
+    this.firstName = map['firstName'];
+    this.lastName = map['lastName'];
+    this.picUrl = map['picUrl'];
+    this.gapYear = map['gapYear'];
+    this.isEmailVerified = map['isEmailVerified'];
+    this.description = map['description'];
+    this.isPAM = map['isPAM'];
+    this.creationDate =
+        map['creationDate'] != null ? map['creationDate'] : null;
+    this.type = map['type'];
+  }
+
   toJson() {
     return {
-      "id": this.id = '',
+      "id": this.id,
       "email": this.email,
       "promo": this.promo,
       "firstName": this.firstName,

@@ -153,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.person_pin),
-              title: Text('Profile'),
+              title: Text('Profil'),
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.account_balance),
