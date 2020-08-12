@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:meuh_life/models/ChatRoom.dart';
 import 'package:meuh_life/models/Message.dart';
 import 'package:meuh_life/models/Organisation.dart';
@@ -135,11 +136,18 @@ class _ConversationScreenState extends State<ConversationScreen> {
               itemBuilder: (BuildContext context, int index) {
                 Message message = _messages[index];
                 bool isLeftMessage = checkIfLeftMessage(message);
+                bool isNewDay = true;
+                if (index < _messages.length - 1) {
+                  Message nextMessage = _messages[index + 1];
+                  isNewDay = checkIfNewDay(nextMessage, message);
+                }
 
                 if (isLeftMessage) {
-                  return buildLeftItem(message, isLastMessageLeft(index));
+                  return buildLeftItem(
+                      message, isLastMessageLeft(index), isNewDay);
                 } else {
-                  return buildRightItem(message, isLastMessageRight(index));
+                  return buildRightItem(
+                      message, isLastMessageRight(index), isNewDay);
                 }
               }),
         );
@@ -156,7 +164,32 @@ class _ConversationScreenState extends State<ConversationScreen> {
     return isLeftMessage;
   }
 
-  Widget buildLeftItem(Message message, bool isLastMessageLeft) {
+  bool checkIfNewDay(Message nextMessage, Message message) {
+    int diffDays =
+        nextMessage.creationDate.difference(message.creationDate).inDays;
+    bool isNewDay = (diffDays != 0);
+    return isNewDay;
+  }
+
+  Widget buildDateItem(Message message, bool isLeftMessage) {
+    double paddingLeft = isLeftMessage ? 80.0 : 44.0;
+    return Padding(
+      padding: EdgeInsets.only(left: paddingLeft, bottom: 8.0),
+      child: Bubble(
+        alignment: Alignment.centerLeft,
+        color: Colors.blue,
+        child: RichText(
+          textAlign: TextAlign.center,
+          text: TextSpan(
+            text: DateFormat.MMMMEEEEd('fr').format(message.creationDate),
+            style: TextStyle(fontSize: 12.0, color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildLeftItem(Message message, bool isLastMessageLeft, bool isNewDay) {
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, left: 4, right: 80, bottom: 4),
       child: Row(
@@ -171,6 +204,7 @@ class _ConversationScreenState extends State<ConversationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
+                if (isNewDay) buildDateItem(message, true),
                 Bubble(
                   alignment: Alignment.topLeft,
                   color: Colors.grey.shade200,
@@ -193,9 +227,22 @@ class _ConversationScreenState extends State<ConversationScreen> {
                             width: 200,
                           ),
                         ),
-                      SelectableText(
-                        message.content,
-                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Flexible(child: SelectableText(message.content)),
+                          RichText(
+                            textAlign: TextAlign.end,
+                            text: TextSpan(
+                                text: DateFormat.Hm()
+                                    .format(message.creationDate),
+                                style: TextStyle(
+                                    fontSize: 10.0,
+                                    color: Colors.grey)), // default text style
+                          ),
+                        ],
+                      )
                     ],
                   ),
                 ),
@@ -208,7 +255,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
     );
   }
 
-  Widget buildRightItem(Message message, bool isLastMessageRight) {
+  Widget buildRightItem(
+      Message message, bool isLastMessageRight, bool isNewDay) {
     return Padding(
       padding: const EdgeInsets.only(top: 4.0, left: 80, right: 4, bottom: 4),
       child: Row(
@@ -216,8 +264,8 @@ class _ConversationScreenState extends State<ConversationScreen> {
           Expanded(
             child: Column(
               children: <Widget>[
+                if (isNewDay) buildDateItem(message, false),
                 Bubble(
-                  margin: BubbleEdges.only(top: 10),
                   alignment: Alignment.topRight,
                   color: Colors.amber.shade800,
                   child: Column(
@@ -239,10 +287,28 @@ class _ConversationScreenState extends State<ConversationScreen> {
                             width: 200,
                           ),
                         ),
-                      SelectableText(
-                        message.content,
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Flexible(
+                            child: SelectableText(
+                              message.content,
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          RichText(
+                            textAlign: TextAlign.end,
+                            text: TextSpan(
+                                text: DateFormat.Hm()
+                                    .format(message.creationDate),
+                                style: TextStyle(
+                                    fontSize: 10.0,
+                                    color: Colors
+                                        .grey.shade700)), // default text style
+                          ),
+                        ],
+                      )
                     ],
                   ),
                 ),
