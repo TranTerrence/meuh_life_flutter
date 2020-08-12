@@ -15,7 +15,7 @@ import 'package:provider/provider.dart';
 
 class Profile {
   String id = '';
-  String email = ''; //Always like name.lastname@mines-paristech.fr
+  String email = ''; // Always like firstname.lastname@mines-paristech.fr
   String promo = '';
   String firstName = '';
   String lastName = '';
@@ -38,8 +38,7 @@ class Profile {
   Profile(
       {String id,
       String promo,
-      String firstName,
-      String lastName,
+      String email,
       String picUrl,
       String description,
       String type,
@@ -47,11 +46,11 @@ class Profile {
       bool isEmailVerified,
       bool gapYear,
       bool isPAM}) {
-    this.email =
-        (firstName + '.' + lastName + '@mines-paristech.fr').toLowerCase();
+    this.email = email.toLowerCase();
+    String fullName = email.split("@")[0];
     this.promo = promo;
-    this.firstName = capitalize(firstName);
-    this.lastName = capitalize(lastName);
+    this.firstName = capitalizeComposedName(fullName.split(".")[0]);
+    this.lastName = capitalizeComposedName(fullName.split(".")[1]);
     this.picUrl = createPicUrl(lastName, promo, type);
     this.type = type;
     this.creationDate = creationDate;
@@ -386,7 +385,7 @@ class Profile {
 
 String createPicUrl(String lastName, String promo, String type) {
   String lName = capitalize(lastName);
-  String picUrlNameTemp = lName.replaceAll("-", "");
+  String picUrlNameTemp = lName.replaceAll("-", "").replaceAll(" ", "");
   String picUrlName;
   String i = '';
   if (picUrlNameTemp.length > 8) {
@@ -398,5 +397,18 @@ String createPicUrl(String lastName, String promo, String type) {
   return 'https://eleves.mines-paris.eu/static//img/trombi/$i$promo$picUrlName.jpg';
 }
 
-String capitalize(String s) =>
-    s[0].toUpperCase() + s.substring(1).toLowerCase();
+String capitalize(String s) {
+  if (s.length == 0) return s;
+  if (s.length == 1) return s.toUpperCase();
+  if (s.length > 1) return s[0].toUpperCase() + s.substring(1).toLowerCase();
+  return s;
+}
+
+String capitalizeComposedName(String s) {
+  return s.split("_")
+      .map((particule) => capitalize(particule))
+      .join(" ")
+      .split("-")
+      .map((particule) => capitalize(particule))
+      .join("-");
+}
