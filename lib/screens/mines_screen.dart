@@ -53,6 +53,7 @@ class _MarketScreenState extends State<MarketScreen>
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return <Widget>[
             SliverAppBar(
+              backgroundColor: Colors.white,
               title: showChoiceChip(),
               pinned: false,
               floating: true,
